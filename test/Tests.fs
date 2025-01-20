@@ -2,6 +2,7 @@ module Tests
 
 open System
 open Xunit
+open Wabby.Lang
 open Wasmtime
 
 [<Fact>]
@@ -71,3 +72,62 @@ let ``Can run void language``() =
     let instance = linker.Instantiate(store, modd)
 
     Assert.True(true)
+[<Fact>]
+let ``Can run void language from parser methods``() =
+    let engine = new Engine()
+    let magic = Wabby.Lang.Parser.magic()
+    let version = Wabby.Lang.Parser.version()
+
+    let bytes = Array.concat [ magic; version]
+    let modd = Module.FromBytes(engine, "voidLang", bytes)
+
+    let linker = new Linker(engine)
+    let store = new Store(engine)
+
+    let instance = linker.Instantiate(store, modd)
+
+    Assert.True(true)
+
+[<Fact>]
+let ``Can handcraft module from bytes``() =
+    let engine = new Engine()
+    let magic = Parser.magic()
+    let version = Parser.version()
+    let header = Array.concat [ magic; version ]
+
+    let typeSection: byte array = [|
+        1uy; //section identifier
+        4uy; //section size in bytes
+        1uy; //number of entries that follow
+        // type section - entry 0
+        96uy; //Type `function`
+        0uy; // Number of parameters
+        0uy  // Number of return values
+        |]
+    let functionSection : byte array = [|
+        3uy; //Section identifier
+        2uy; //section size in bytes
+        1uy; //number of entries that follow
+        // Function section - entry 0
+        0uy //Index of the type section entry
+        |]
+    let codeSection : byte array = [|
+        10uy; //section identifier
+        4uy; //sectoin size in bytes
+        1uy; //number of entries that follow
+        //code section - entry 0
+        2uy; //Entry size in bytes
+        0uy; //Number of local variables
+        11uy //`end` instruction
+        |]
+
+    let bytes = Array.concat [ header; typeSection; functionSection; codeSection ]
+    let modd = Module.FromBytes(engine, "voidLang", bytes)
+
+    let linker = new Linker(engine)
+    let store = new Store(engine)
+
+    let instance = linker.Instantiate(store, modd)
+
+    Assert.True(true)
+
