@@ -5,6 +5,9 @@ open Xunit
 open Wabby.Lang
 open Wasmtime
 
+let printWasm (bytes: byte array) =
+    System.IO.File.WriteAllBytes("./atest.wasm", bytes)
+
 [<Fact>]
 let ``My test`` () =
     Assert.True(true)
@@ -122,6 +125,8 @@ let ``Can handcraft module from bytes``() =
         |]
 
     let bytes = Array.concat [ header; typeSection; functionSection; codeSection ]
+    printWasm bytes
+
     let modd = Module.FromBytes(engine, "voidLang", bytes)
 
     let linker = new Linker(engine)
