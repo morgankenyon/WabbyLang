@@ -6,6 +6,10 @@ module Parser =
     [<Literal>]
     let SECTION_ID_TYPE = 1uy
     [<Literal>]
+    let SECTION_ID_FUNCTION = 3uy
+    [<Literal>]
+    let SECTION_ID_CODE = 10uy
+    [<Literal>]
     let TYPE_FUNCTION = 96uy
 
     let stringToBytes (s: string) =
@@ -35,21 +39,43 @@ module Parser =
     let i32 (v: int) =
         if v <= 63 then byte v else 0uy
 
-    let section (id: uint, contents: byte array) =
+    let section (id: byte) (contents: byte array) =
         let normalizedSize = i32 contents.Length
-        let headers = [|byte id; normalizedSize |]
-        Array.concat [ headers; contents]
+        let headers = [| id ; normalizedSize |]
+        Array.concat [ headers; contents ]
 
     let vec (elements: byte array) =
-        let normalizedSize = [| i32 elements.Length |]
-        Array.concat [ normalizedSize; elements ]
+        let normalizedSize = i32 elements.Length
+        Array.concat [ [|normalizedSize |]; elements]
+
+    let vecFlatten (elements: byte array array) =
+        let normalizedSize = i32 elements.Length
+        let flattenedElements = elements
+                                |> Array.collect id
+        Array.concat [ [| normalizedSize |]; flattenedElements ]
 
     let functype (paramTypes: byte array, resultTypes: byte array) =
         let paramVec = vec paramTypes
         let resultVec = vec resultTypes
         Array.concat [ [| TYPE_FUNCTION |]; paramVec; resultVec ]
 
-    let typesec (functypes : byte array) =
-        let funcVec = vec functypes
-        Array.concat [ [| SECTION_ID_TYPE |]; funcVec ]
+    let typesec (functypes : byte array array) =
+        let funcVec = vecFlatten functypes
+        section SECTION_ID_TYPE funcVec
+
+    let funcsec (typeidxs : byte array array) =
+        vecFlatten typeidxs
+        |> section SECTION_ID_FUNCTION
+
+    let code (func: byte array) =
+        let normalizedSize = i32 func.Length
+        Array.concat [ [| normalizedSize |]; func ]
+
+    let func (locals: byte array) (body: byte array) =
+        let localsVec = vec locals
+        Array.concat [ localsVec; body ]
+
+    let codesec (codes: byte array array) =
+        vecFlatten codes
+        |> section SECTION_ID_CODE
 

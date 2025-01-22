@@ -6,6 +6,11 @@ open Wabby.Lang
 open Wasmtime
 
 let printWasm (bytes: byte array) =
+    let stringRepresentation = bytes
+                                |> Array.map (fun by -> by.ToString())
+                                |> String.concat ""
+    //let str = stringRepresentation |> String.concat ""
+    System.IO.File.WriteAllText("./atest.txt", stringRepresentation)
     System.IO.File.WriteAllBytes("./atest.wasm", bytes)
 
 [<Fact>]
@@ -116,7 +121,7 @@ let ``Can handcraft module from bytes``() =
         |]
     let codeSection : byte array = [|
         10uy; //section identifier
-        4uy; //sectoin size in bytes
+        4uy; //section size in bytes
         1uy; //number of entries that follow
         //code section - entry 0
         2uy; //Entry size in bytes
@@ -125,7 +130,7 @@ let ``Can handcraft module from bytes``() =
         |]
 
     let bytes = Array.concat [ header; typeSection; functionSection; codeSection ]
-    printWasm bytes
+    //printWasm bytes
 
     let modd = Module.FromBytes(engine, "voidLang", bytes)
 
@@ -136,3 +141,37 @@ let ``Can handcraft module from bytes``() =
 
     Assert.True(true)
 
+
+
+[<Fact>]
+let ``Can use helper methods to craft empty module``() =
+    let emptyBytes: byte [] = Array.zeroCreate 0
+    let magic = Parser.magic()
+    let version = Parser.version()
+
+    //Creating type section
+    let funcType = Parser.functype(emptyBytes, emptyBytes)
+    let typesec = Parser.typesec([| funcType |])
+
+    //creating func section
+    let funcsec = Parser.funcsec([| [|0uy|] |])
+
+    //creating code section
+    let instrEnd = 11uy
+    let func = Parser.func emptyBytes [| instrEnd |]
+    let code = Parser.code func
+    let codesec = Parser.codesec [| code |]
+
+    let bytes = Array.concat [ magic; version; typesec; funcsec; codesec ]
+    //printWasm bytes
+
+    let engine = new Engine()
+
+    let modd = Module.FromBytes(engine, "voidLang", bytes)
+
+    let linker = new Linker(engine)
+    let store = new Store(engine)
+
+    let instance = linker.Instantiate(store, modd)
+
+    Assert.True(true)
