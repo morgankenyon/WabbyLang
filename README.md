@@ -1,8 +1,8 @@
 # WabbyLang
 
-A language targeting WASM.
+WabbyLang - A language that compiles to WASM bytecode.
 
-An experimental language/compiler targeting WASM as it's runtime.
+This is currently an experimental language/compiler targeting WASM as it's runtime.
 
 Compiler is currently written in F#.
 
