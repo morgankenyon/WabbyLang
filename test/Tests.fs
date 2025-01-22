@@ -83,8 +83,8 @@ let ``Can run void language``() =
 [<Fact>]
 let ``Can run void language from parser methods``() =
     let engine = new Engine()
-    let magic = Waux.Lang.Parser.magic()
-    let version = Waux.Lang.Parser.version()
+    let magic = Wasm.magic()
+    let version = Wasm.version()
 
     let bytes = Array.concat [ magic; version]
     let modd = Module.FromBytes(engine, "voidLang", bytes)
@@ -99,8 +99,8 @@ let ``Can run void language from parser methods``() =
 [<Fact>]
 let ``Can handcraft module from bytes``() =
     let engine = new Engine()
-    let magic = Parser.magic()
-    let version = Parser.version()
+    let magic = Wasm.magic()
+    let version = Wasm.version()
     let header = Array.concat [ magic; version ]
 
     let typeSection: byte array = [|
@@ -146,21 +146,21 @@ let ``Can handcraft module from bytes``() =
 [<Fact>]
 let ``Can use helper methods to craft empty module``() =
     let emptyBytes: byte [] = Array.zeroCreate 0
-    let magic = Parser.magic()
-    let version = Parser.version()
+    let magic = Wasm.magic()
+    let version = Wasm.version()
 
     //Creating type section
-    let funcType = Parser.functype(emptyBytes, emptyBytes)
-    let typesec = Parser.typesec([| funcType |])
+    let funcType = Wasm.functype(emptyBytes, emptyBytes)
+    let typesec = Wasm.typesec([| funcType |])
 
     //creating func section
-    let funcsec = Parser.funcsec([| [|0uy|] |])
+    let funcsec = Wasm.funcsec([| [|0uy|] |])
 
     //creating code section
     let instrEnd = 11uy
-    let func = Parser.func emptyBytes [| instrEnd |]
-    let code = Parser.code func
-    let codesec = Parser.codesec [| code |]
+    let func = Wasm.func emptyBytes [| instrEnd |]
+    let code = Wasm.code func
+    let codesec = Wasm.codesec [| code |]
 
     let bytes = Array.concat [ magic; version; typesec; funcsec; codesec ]
     //printWasm bytes
@@ -179,28 +179,28 @@ let ``Can use helper methods to craft empty module``() =
 [<Fact>]
 let ``Can use helper methods to craft empty module with export``() =
     let emptyBytes: byte [] = Array.zeroCreate 0
-    let magic = Parser.magic()
-    let version = Parser.version()
+    let magic = Wasm.magic()
+    let version = Wasm.version()
 
     //Creating type section
-    let funcType = Parser.functype(emptyBytes, emptyBytes)
-    let typesec = Parser.typesec([| funcType |])
+    let funcType = Wasm.functype(emptyBytes, emptyBytes)
+    let typesec = Wasm.typesec([| funcType |])
 
     //creating func section
-    let funcsec = Parser.funcsec([| [|0uy|] |])
+    let funcsec = Wasm.funcsec([| [|0uy|] |])
 
     //creating export section
-    let exportDesc = Parser.exportdesc(0uy)
-    let export = Parser.export "main" exportDesc
-    let exportsec = Parser.exportsec [| export |]
+    let exportDesc = Wasm.exportdesc(0uy)
+    let export = Wasm.export "main" exportDesc
+    let exportsec = Wasm.exportsec [| export |]
 
     //creating code section
     let instrEnd = 11uy
-    let func = Parser.func emptyBytes [| instrEnd |]
-    let code = Parser.code func
-    let codesec = Parser.codesec [| code |]
+    let func = Wasm.func emptyBytes [| instrEnd |]
+    let code = Wasm.code func
+    let codesec = Wasm.codesec [| code |]
 
-    let bytes = Parser.modd [| typesec; funcsec; exportsec; codesec |]
+    let bytes = Wasm.modd [| typesec; funcsec; exportsec; codesec |]
     printWasm bytes
 
     let engine = new Engine()

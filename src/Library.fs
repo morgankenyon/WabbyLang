@@ -1,6 +1,6 @@
 ﻿namespace Waux.Lang
 
-module Parser =
+module Wasm =
     open System
 
     [<Literal>]
