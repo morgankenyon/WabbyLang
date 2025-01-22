@@ -8,6 +8,8 @@ module Parser =
     [<Literal>]
     let SECTION_ID_FUNCTION = 3uy
     [<Literal>]
+    let SECTION_ID_EXPORT = 7uy
+    [<Literal>]
     let SECTION_ID_CODE = 10uy
     [<Literal>]
     let TYPE_FUNCTION = 96uy
@@ -54,6 +56,7 @@ module Parser =
                                 |> Array.collect id
         Array.concat [ [| normalizedSize |]; flattenedElements ]
 
+    //Type Section
     let functype (paramTypes: byte array, resultTypes: byte array) =
         let paramVec = vec paramTypes
         let resultVec = vec resultTypes
@@ -63,10 +66,27 @@ module Parser =
         let funcVec = vecFlatten functypes
         section SECTION_ID_TYPE funcVec
 
+    //Function Section
     let funcsec (typeidxs : byte array array) =
         vecFlatten typeidxs
         |> section SECTION_ID_FUNCTION
 
+    //Export section
+    let exportdesc (idx: byte) =
+        [| 0uy; idx |]
+    let name (s: string) =
+        s
+        |> stringToBytes
+        |> vec
+
+    let export (s: string) (exportDesc: byte array) =
+        Array.concat [ name(s) ; exportDesc ]
+
+    let exportsec (exports: byte array array) =
+        vecFlatten exports
+        |> section SECTION_ID_EXPORT
+
+    //Code section
     let code (func: byte array) =
         let normalizedSize = i32 func.Length
         Array.concat [ [| normalizedSize |]; func ]
@@ -79,3 +99,8 @@ module Parser =
         vecFlatten codes
         |> section SECTION_ID_CODE
 
+
+    let modd(sections: byte array array) =
+        let flattenedSections = sections
+                                |> Array.collect id
+        Array.concat [ magic(); version(); flattenedSections ]

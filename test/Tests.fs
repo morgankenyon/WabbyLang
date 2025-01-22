@@ -132,7 +132,7 @@ let ``Can handcraft module from bytes``() =
     let bytes = Array.concat [ header; typeSection; functionSection; codeSection ]
     //printWasm bytes
 
-    let modd = Module.FromBytes(engine, "voidLang", bytes)
+    let modd = Module.FromBytes(engine, "nopLang", bytes)
 
     let linker = new Linker(engine)
     let store = new Store(engine)
@@ -167,7 +167,45 @@ let ``Can use helper methods to craft empty module``() =
 
     let engine = new Engine()
 
-    let modd = Module.FromBytes(engine, "voidLang", bytes)
+    let modd = Module.FromBytes(engine, "nopLang", bytes)
+
+    let linker = new Linker(engine)
+    let store = new Store(engine)
+
+    let instance = linker.Instantiate(store, modd)
+
+    Assert.True(true)
+
+[<Fact>]
+let ``Can use helper methods to craft empty module with export``() =
+    let emptyBytes: byte [] = Array.zeroCreate 0
+    let magic = Parser.magic()
+    let version = Parser.version()
+
+    //Creating type section
+    let funcType = Parser.functype(emptyBytes, emptyBytes)
+    let typesec = Parser.typesec([| funcType |])
+
+    //creating func section
+    let funcsec = Parser.funcsec([| [|0uy|] |])
+
+    //creating export section
+    let exportDesc = Parser.exportdesc(0uy)
+    let export = Parser.export "main" exportDesc
+    let exportsec = Parser.exportsec [| export |]
+
+    //creating code section
+    let instrEnd = 11uy
+    let func = Parser.func emptyBytes [| instrEnd |]
+    let code = Parser.code func
+    let codesec = Parser.codesec [| code |]
+
+    let bytes = Parser.modd [| typesec; funcsec; exportsec; codesec |]
+    printWasm bytes
+
+    let engine = new Engine()
+
+    let modd = Module.FromBytes(engine, "nopLang", bytes)
 
     let linker = new Linker(engine)
     let store = new Store(engine)
