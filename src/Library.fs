@@ -1,4 +1,4 @@
-﻿namespace Wabby.Lang
+﻿namespace Waux.Lang
 
 module Parser =
     open System

@@ -2,7 +2,7 @@ module Tests
 
 open System
 open Xunit
-open Wabby.Lang
+open Waux.Lang
 open Wasmtime
 
 let printWasm (bytes: byte array) =
@@ -83,8 +83,8 @@ let ``Can run void language``() =
 [<Fact>]
 let ``Can run void language from parser methods``() =
     let engine = new Engine()
-    let magic = Wabby.Lang.Parser.magic()
-    let version = Wabby.Lang.Parser.version()
+    let magic = Waux.Lang.Parser.magic()
+    let version = Waux.Lang.Parser.version()
 
     let bytes = Array.concat [ magic; version]
     let modd = Module.FromBytes(engine, "voidLang", bytes)

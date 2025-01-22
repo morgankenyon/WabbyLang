@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Wabby.Lang.fsproj" />
+    <ProjectReference Include="..\src\Waux.Lang.fsproj" />
   </ItemGroup>
 
 </Project>
