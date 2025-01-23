@@ -3,6 +3,29 @@
 module Parser =
     open Models
 
+    type ExprPrecedence =
+    | LOWEST = 1
+    | EQUALS = 2
+    | LESSGREATER = 3
+    | SUM = 4
+    | PRODUCT = 5
+    | PREFIX = 6
+    | CALL = 7
+    | INDEX = 8
+
+    let PrecedenceMap =
+        Map.empty
+            //.Add(Token.EQ, ExprPrecedence.EQUALS)
+            //.Add(TokenType.NOT_EQ, ExprPrecedence.EQUALS)
+            //.Add(TokenType.LT, ExprPrecedence.LESSGREATER)
+            //.Add(TokenType.GT, ExprPrecedence.LESSGREATER)
+            .Add(Token.PLUS, ExprPrecedence.SUM)
+            //.Add(TokenType.MINUS, ExprPrecedence.SUM)
+            //.Add(TokenType.SLASH, ExprPrecedence.PRODUCT)
+            //.Add(TokenType.ASTERISK, ExprPrecedence.PRODUCT)
+            //.Add(TokenType.LPAREN, ExprPrecedence.CALL)
+            //.Add(TokenType.LBRACKET, ExprPrecedence.INDEX)
+
     type prefixParse = ParserState -> Ast.Expression option
     and infixParse = ParserState -> Ast.Expression -> Ast.Expression option
 
@@ -28,6 +51,9 @@ module Parser =
     let curTokenIs (p: ParserState) (t: Token) =
         p.curToken.Token = t
 
+    let peekTokenIs (p: ParserState) (t: Token) =
+        p.peekToken.Token = t
+
     let nextToken (p: ParserState) =
         p.curToken <- p.peekToken
         p.peekToken <- Lexer.nextToken p.lexer
@@ -42,30 +68,56 @@ module Parser =
             p.errors.Add(errorMsg)
             None
 
-    let parseExpression p = // precedence =
+    let getTokenPrecedence tokenType =
+        match PrecedenceMap.ContainsKey tokenType with
+        | true ->
+            PrecedenceMap.[tokenType]
+            //precedence
+        | false -> 
+            ExprPrecedence.LOWEST
+
+    let peekPrecedence p =
+        getTokenPrecedence p.peekToken.Token
+
+    let curPrecedence p =
+        getTokenPrecedence p.curToken.Token
+    let parseExpression p precedence =
         match p.prefixParseFns.ContainsKey p.curToken.Token with
         | true -> 
             let prefix = p.prefixParseFns.[p.curToken.Token]
             let mutable leftExp = prefix p
 
-            //while not (peekTokenIs p TokenType.SEMICOLON) && precedence < peekPrecedence p do
+            while not (peekTokenIs p Token.SEMICOLON) && precedence < peekPrecedence p do
                 
-            //    leftExp <- match p.infixParseFns.ContainsKey p.peekToken.TokenType && leftExp.IsSome with
-            //                | true ->
-            //                    let infixFn = p.infixParseFns.[p.peekToken.TokenType]
-            //                    nextToken p
-            //                    infixFn p leftExp.Value
-            //                | _ -> leftExp
+                leftExp <- match p.infixParseFns.ContainsKey p.peekToken.Token && leftExp.IsSome with
+                            | true ->
+                                let infixFn = p.infixParseFns.[p.peekToken.Token]
+                                nextToken p
+                                infixFn p leftExp.Value
+                            | _ -> leftExp
             leftExp
         | false -> 
             p.errors.Add(sprintf "no prefix parse function for %s found" p.curToken.Literal)
             None
 
+    let parseInfixExpression p left =
+        let curToken = p.curToken
+
+        let precedence = curPrecedence p
+
+        nextToken p
+
+        match parseExpression p precedence with
+        | Some right ->
+            new Ast.InfixExpression(curToken, left, curToken.Literal, right)
+            |> toSomeExpr
+        | None -> None
+
     let parseStatement (p: ParserState) =
         match p.curToken.Token with 
         //| Token.LET -> parseLetStatement p
         //| TokenType.RETURN -> parseReturnStatement p
-        | _ -> parseExpression p
+        | _ -> parseExpression p ExprPrecedence.LOWEST
 
     let createParser lexer =
         let firstToken = Lexer.nextToken lexer
@@ -88,7 +140,7 @@ module Parser =
 
         //regist infix parse functions
         let infixFns = new System.Collections.Generic.Dictionary<Token, infixParse>()
-        //infixFns.Add(TokenType.PLUS, parseInfixExpression)
+        infixFns.Add(Token.PLUS, parseInfixExpression)
         //infixFns.Add(TokenType.MINUS, parseInfixExpression)
         //infixFns.Add(TokenType.SLASH, parseInfixExpression)
         //infixFns.Add(TokenType.ASTERISK, parseInfixExpression)

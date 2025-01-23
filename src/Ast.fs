@@ -4,7 +4,9 @@ module Ast =
     open Models
     type AstType =
         | Module
+        | InfixExpression
         | IntegerLiteral
+
         //| LongLiteral
 
     type NodeType =
@@ -38,6 +40,21 @@ module Ast =
                 this.expressions
                     |> Array.map (fun s -> s.Str())
                     |> Array.reduce (fun a b -> a + b)
+
+    type InfixExpression(token: TokenPair, left: Expression, operator: string, right: Expression) =
+        member this.token = token
+        member this.left = left
+        member this.operator = operator
+        member this.right = right
+        interface Expression with
+            member this.NodeType = NodeType.Expression
+            member this.AType () = AstType.InfixExpression
+            member this.TokenLiteral () = token.Literal
+            member this.Str () = 
+                let leftStr = this.left.Str()
+                let rightStr = this.right.Str()
+
+                sprintf "(%s %s %s)"  leftStr this.operator rightStr
 
     type IntegerLiteral(token: TokenPair, value: int32) =
         member this.token = token

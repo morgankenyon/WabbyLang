@@ -29,14 +29,16 @@ module LexerTests =
         let lexer = Lexer.createLexer input
         expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
 
-    //[<Fact>]
-    //let ``Can Lex Basic Symbols`` () =
-    //    let expectedTokens =
-    //        [
-    //            { Token = Tokens.NUMBER ; Literal = "2" }
-    //            { Token = Tokens.EOF ; Literal = "" };
-    //        ]
+    [<Fact>]
+    let ``Can Lex Basic Arithmetic`` () =
+        let expectedTokens =
+            [
+                { Token = Token.NUMBER ; Literal = "2" }
+                { Token = Token.PLUS ; Literal = "+" }
+                { Token = Token.NUMBER ; Literal = "1" }
+                { Token = Token.EOF ; Literal = "" };
+            ]
     
-    //    let input = "2"
-    //    let lexer = Lexer.createLexer input
-    //    expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
+        let input = "2 + 1"
+        let lexer = Lexer.createLexer input
+        expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))

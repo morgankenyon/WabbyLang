@@ -49,12 +49,18 @@
         //| Letter -> readIdentifier(l)
         | Digit -> readNumber(l)
         | Illegal -> (Token.ILLEGAL, l.ch.ToString())
-    //let nextComplexToken (l: LexerState) =
-        
+
+    let skipWhitespace(l: LexerState) =
+        while l.ch = ' ' || l.ch = '\t' || l.ch = '\n' || l.ch = '\r' do
+            readChar l
+        ()
     let nextToken (l: LexerState) =
+        skipWhitespace l
+
         let (tokenType, literal) =
             match l.ch with
             | '\000' -> (Token.EOF, "")
+            | '+' -> (Token.PLUS, l.ch.ToString())
             | _ -> nextComplexToken l
 
         let token = { Token = tokenType; Literal = literal }

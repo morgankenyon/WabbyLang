@@ -17,22 +17,30 @@ module Wasm =
     [<Literal>]
     let i32_VAL_TYPE = 127uy
     [<Literal>]
-    let i32_CONST = 65uy
+    let INSTR_i32_CONST = 65uy
+    [<Literal>]
+    let INSTR_i32_ADD = 106uy
+    [<Literal>]
+    let INSTR_i32_SUB = 107uy
     [<Literal>]
     let i64_VAL_TYPE = 126uy
     [<Literal>]
-    let i64_CONST = 66uy
+    let INSTR_i64_CONST = 66uy
     [<Literal>]
     let f32_VAL_TYPE = 125uy
     [<Literal>]
-    let f32_CONST = 67uy
+    let INSTR_f32_CONST = 67uy
     [<Literal>]
     let f64_VAL_TYPE = 124uy
     [<Literal>]
-    let f64_CONST = 68uy
+    let INSTR_f64_CONST = 68uy
 
     [<Literal>]
     let INSTR_END = 11uy
+
+    type WasmValueBytes =
+    | Value of byte
+    | Values of byte array
 //    const valtype = {
 //  i32: 0x7f,
 //  i64: 0x7e,
@@ -131,16 +139,48 @@ module Wasm =
                                 |> Array.collect id
         Array.concat [ magic(); version(); flattenedSections ]
 
+    let rec private expressionToWasm (expr : Ast.Expression) : WasmValueBytes array =
+        let mutable wasmBytes : WasmValueBytes array option = None
+        let aType = expr.AType()
+        match aType with
+        | Ast.AstType.IntegerLiteral ->
+            let integerLiteral = expr :?> Ast.IntegerLiteral
+            let value = i32 integerLiteral.value
+            wasmBytes <- Some [| Value INSTR_i32_CONST; Value value |]
+        | Ast.AstType.InfixExpression ->
+            let infixExpression = expr :?> Ast.InfixExpression
+            let leftValue = expressionToWasm infixExpression.left
+            let operator = 
+                if infixExpression.operator = "+" 
+                then INSTR_i32_ADD
+                else INSTR_i32_SUB
+            let rightValue = expressionToWasm infixExpression.right
+            wasmBytes <- Some [| Values leftValue; Values rightValue; Value operator |]
+        | _ -> 
+            wasmBytes <- None
+
+        match wasmBytes with
+        | Some bytes ->
+            Array.concat [ bytes; [| INSTR_END |] ]
+        | None -> 
+            let emptyBytes: byte [] = Array.zeroCreate 0
+            emptyBytes
+
     let generateWasm (codeModule : Ast.Module) =
         let mutable wasmBytes : byte array option = None
         for expr in codeModule.expressions do
             //let aType = expr.AType()
-            let aType = Ast.AstType.IntegerLiteral
+            let aType = expr.AType()
             match aType with
             | Ast.AstType.IntegerLiteral ->
                 let integerLiteral = expr :?> Ast.IntegerLiteral
                 let value = i32 integerLiteral.value
-                wasmBytes <- Some [| i32_CONST; value |]
+                wasmBytes <- Some [| INSTR_i32_CONST; value |]
+            //| Ast.AstType.InfixExpression ->
+            //    let infixExpression = expr :?> Ast.InfixExpression
+            //    let leftValue = i32 infixExpression.left
+            //    let operator = infixExpression.operator
+            //    let rightValue = i32 infixExpression.right
             | _ ->
                 wasmBytes <- None
         match wasmBytes with

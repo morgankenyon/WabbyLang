@@ -5,9 +5,12 @@
         | EOF
         //identifiers + literals
         | NUMBER
+        //operators
+        | PLUS
         //delimeters
         | PERIOD
         | NEW_LINE
+        | SEMICOLON
 
     type TokenPair =
         {
