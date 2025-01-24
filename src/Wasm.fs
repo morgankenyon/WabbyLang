@@ -260,7 +260,8 @@ module Wasm =
         match statement.StateType() with
         | Ast.StatementType.Module ->
             let modd = statement :?> Ast.Module
-            convertToSymbolMap symbolMap modd.statements.[0]
+            for state in modd.statements do
+                convertToSymbolMap symbolMap state
             ()
         | Ast.StatementType.LetStatement ->
             let letState = statement :?> Ast.LetStatement

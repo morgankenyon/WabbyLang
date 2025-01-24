@@ -320,14 +320,7 @@ module WasmTests =
     
     [<Fact>]
     let ``Can build simple symbol table`` () =
-        let valueTokenPair = { Token = Token.NUMBER; Literal = "6" }
-        let value = new Ast.IntegerLiteral(valueTokenPair, 6)
-
-        let identifierTokenPair = { Token = Token.IDENT; Literal = "test" }
-        let identifier = new Ast.Identifier(identifierTokenPair, "test")
-        
-        let letTokenPair = { Token = Token.LET; Literal = "let" }
-        let letStatement = new Ast.LetStatement(letTokenPair, identifier, value)
+        let letStatement = Helpers.buildLetStatement "test" 6
         
         let modd = new Ast.Module([| letStatement |])
 
@@ -335,3 +328,30 @@ module WasmTests =
 
         Assert.Equal(1, symbolMap.Count)
         Assert.True(symbolMap.ContainsKey("test"))
+        let testEntry = symbolMap["test"]
+        Assert.Equal("test", testEntry.name)
+        Assert.Equal(0, testEntry.index)
+        Assert.Equal(Wasm.SymbolType.Local, testEntry.symbolType)
+    
+    [<Fact>]
+    let ``Can build symbol table from multiple lets`` () =
+        let first = Helpers.buildLetStatement "test1" 6
+        let second = Helpers.buildLetStatement "test2" 16
+        
+        let modd = new Ast.Module([| first; second |])
+
+        let symbolMap = Wasm.buildSymbolMap modd
+
+        Assert.Equal(2, symbolMap.Count)
+        Assert.True(symbolMap.ContainsKey("test1"))
+        Assert.True(symbolMap.ContainsKey("test2"))
+        
+        let firstEntry = symbolMap["test1"]
+        Assert.Equal("test1", firstEntry.name)
+        Assert.Equal(0, firstEntry.index)
+        Assert.Equal(Wasm.SymbolType.Local, firstEntry.symbolType)
+        
+        let testEntry = symbolMap["test2"]
+        Assert.Equal("test2", testEntry.name)
+        Assert.Equal(1, testEntry.index)
+        Assert.Equal(Wasm.SymbolType.Local, testEntry.symbolType)
