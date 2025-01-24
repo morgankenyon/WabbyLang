@@ -15,7 +15,7 @@ module EndToEndTests =
     let ``Can compile addition operation`` () =
         let input = "5 + 2"
 
-        EndToEnd.compileInstantiateAndPrint input false
+        EndToEnd.compileInstantiateAndPrint input true
 
     [<Fact>]
     let ``Can compile subtraction operation`` () =
@@ -63,7 +63,7 @@ module EndToEndTests =
     let ``Can compile all operation formula`` () =
         let input = "10 + 10 / 5 * 2 - 1"
 
-        let bytes = EndToEnd.compileInstantiateAndPrint input true
+        let bytes = EndToEnd.compileInstantiateAndPrint input false
 
         let result = Helpers.runWithInt32Return bytes
 
