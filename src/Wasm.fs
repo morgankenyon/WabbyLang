@@ -38,6 +38,13 @@ module Wasm =
     let f64_VAL_TYPE = 124uy
     [<Literal>]
     let INSTR_f64_CONST = 68uy
+    
+    [<Literal>]
+    let INSTR_LOCAL_GET = 32uy
+    [<Literal>]
+    let INSTR_LOCAL_SET = 33uy
+    [<Literal>]
+    let INSTR_LOCAL_TEE = 34uy
 
     [<Literal>]
     let INSTR_END = 11uy
@@ -49,6 +56,20 @@ module Wasm =
     type WasmTree =
     | Empty
     | Node of value: WasmValueBytes array option * inners: WasmTree array option
+
+    type WasmFuncBytes =
+        {
+            locals: byte array
+            body: byte array
+        }
+    type SymbolType =
+    | Local
+    type SymbolEntry =
+        {
+            name: string
+            index: int
+            symbolType: SymbolType 
+        }
 //    const valtype = {
 //  i32: 0x7f,
 //  i64: 0x7e,
@@ -135,6 +156,10 @@ module Wasm =
         let localsVec = vec locals
         Array.concat [ localsVec; body ]
 
+    let funcCombined (wasmBytes: WasmFuncBytes) =
+        let localsVec = vec wasmBytes.locals
+        Array.concat [ localsVec; wasmBytes.body ]
+
     let code (func: byte array) =
         let normalizedSize = i32 func.Length
         Array.concat [ [| normalizedSize |]; func ]
@@ -202,32 +227,58 @@ module Wasm =
         | Values vvs ->
             Array.concat [ bytes; vvs ]
 
-    let rec private wasmTreeToBytes (tree : WasmTree) : byte array =
+    let rec private wasmTreeToBytes (tree : WasmTree) : WasmFuncBytes =
         match tree with
-        | Empty -> [| |]
+        | Empty -> 
+            { body = [| |]; locals = [| |] }
         | Node (value, inners) when value.IsSome && inners.IsNone ->
             let vals = value.Value
             let mutable bytes: byte array = [| |]
             for v in vals do
                 bytes <- generateBytes bytes v
-            bytes
+            { body = bytes; locals = [| |] }
         | Node (value, inners) when value.IsNone && inners.IsSome ->
             let vals = inners.Value
             let mutable bytes: byte array = [| |]
             for v in vals do
                 let innerBytes = wasmTreeToBytes v
-                bytes <- Array.concat [ bytes; innerBytes ]
-            bytes
-        | _ -> [| |]
+                bytes <- Array.concat [ bytes; innerBytes.body ]
+            { body = bytes; locals = [| |] }
+        | _ -> { body = [| |]; locals = [| |] }
 
 
-    let generateWasm (codeModule : Ast.Module) : byte array =
+    let generateWasm (codeModule : Ast.Module) : WasmFuncBytes =
         let firstStatement = codeModule.statements.[0]
         let wasmTree = statementToWasmTree firstStatement
-        let bytes = wasmTreeToBytes wasmTree
+        let wasmBytes = wasmTreeToBytes wasmTree
 
-        Array.concat [ bytes; [| INSTR_END |] ]
-        
+        let bodyBytes = Array.concat [ wasmBytes.body; [| INSTR_END |]]
+
+        { body = bodyBytes; locals = wasmBytes.locals }
+     
+    let rec private convertToSymbolMap (symbolMap: System.Collections.Generic.Dictionary<string, SymbolEntry>) (statement: Ast.Statement) =
+        match statement.StateType() with
+        | Ast.StatementType.Module ->
+            let modd = statement :?> Ast.Module
+            convertToSymbolMap symbolMap modd.statements.[0]
+            ()
+        | Ast.StatementType.LetStatement ->
+            let letState = statement :?> Ast.LetStatement
+            let name = letState.name.value
+            let symbolEntry = 
+                {
+                    name = name
+                    index = symbolMap.Count
+                    symbolType = SymbolType.Local
+                }
+            symbolMap.Add(name, symbolEntry)
+        | _ -> ()
+
+    let buildSymbolMap (codeModule : Ast.Module) =
+        let symbolMap = new System.Collections.Generic.Dictionary<string, SymbolEntry>();
+
+        convertToSymbolMap symbolMap codeModule
+        symbolMap
 
     let toWasm (codeModule : Ast.Module) =
         let emptyBytes: byte [] = Array.zeroCreate 0
@@ -245,10 +296,9 @@ module Wasm =
         let exportsec = exportsec [| export |]
 
         //creating code section
-        //let instrEnd = 11uy
         let functions = 
             generateWasm codeModule
-            |> func emptyBytes
+            |> funcCombined
         //let functions = func emptyBytes emptyBytes
         let code = code functions
         let codesec = codesec [| code |]

@@ -39,7 +39,7 @@ module ParserTests =
                 Ok infix
             | Error msg -> Error msg
         | Error msg -> Error msg
-    let testInfix (infix) (infixFunc) =
+    let testResultInfix (infix) (infixFunc) =
         match infix with
         | Ok ie ->
             infixFunc ie
@@ -64,6 +64,13 @@ module ParserTests =
                 error
             else ""
         Assert.True(0 = p.errors.Count, errorMessage)
+
+
+    let buildInfixExpressionTest (leftValue: int) (operator: string) (rightValue: int) =
+        fun (ie: Ast.InfixExpression) ->
+            testIntegerLiteral ie.left leftValue
+            Assert.Equal(operator, ie.operator)
+            testIntegerLiteral ie.right rightValue
 
     [<Fact>]
     let ``Can parse integer expression`` () =
@@ -98,12 +105,9 @@ module ParserTests =
 
         let infix = asInfixFromStatement modd.statements.[0]
 
-        let infixTest = fun (ie: Ast.InfixExpression) ->
-            testIntegerLiteral ie.left 2
-            Assert.Equal("+", ie.operator)
-            testIntegerLiteral ie.right 4
+        let infixTest = buildInfixExpressionTest 2 "+" 4
         
-        testInfix infix infixTest
+        testResultInfix infix infixTest
 
     [<Fact>]
     let ``Can parse combined arithmetic expression`` () =
@@ -124,14 +128,9 @@ module ParserTests =
 
             Assert.True(isInfix ie.left)
 
-            let infix2 = asInfix ie.left 
-
-            match infix2 with
-            | Ok ie2 ->
-                testIntegerLiteral ie2.left 2
-                Assert.Equal("+", ie2.operator)
-                testIntegerLiteral ie2.right 4
-            | Error msg -> Assert.Fail msg
+            let infix2 = asInfix ie.left
+            let infixTest = buildInfixExpressionTest 2 "+" 4
+            testResultInfix infix2 infixTest
 
             Assert.Equal("-", ie.operator)
             testIntegerLiteral ie.right 1
@@ -151,12 +150,9 @@ module ParserTests =
         Assert.Equal(1, modd.statements.Length)
 
         let infix = asInfixFromStatement modd.statements.[0]
-
-        let infixTest = fun (ie: Ast.InfixExpression) ->
-            testIntegerLiteral ie.left 2
-            Assert.Equal("*", ie.operator)
-            testIntegerLiteral ie.right 4
-        testInfix infix infixTest
+        
+        let infixTest = buildInfixExpressionTest 2 "*" 4
+        testResultInfix infix infixTest
 
     [<Fact>]
     let ``Can parse division expression`` () =
@@ -171,13 +167,10 @@ module ParserTests =
         Assert.Equal(1, modd.statements.Length)
 
         let infix = asInfixFromStatement modd.statements.[0]
+        
+        let infixTest = buildInfixExpressionTest 4 "/" 2
 
-        let infixTest = fun (ie: Ast.InfixExpression) ->
-            testIntegerLiteral ie.left 4
-            Assert.Equal("/", ie.operator)
-            testIntegerLiteral ie.right 2
-
-        testInfix infix infixTest
+        testResultInfix infix infixTest
         
 
     [<Fact>]
@@ -199,21 +192,16 @@ module ParserTests =
             Assert.True(isInfix ie.left)
 
             let infix2 = asInfix ie.left
-
-            match infix2 with
-            | Ok ie2 ->
-
-                testIntegerLiteral ie2.left 2
-                Assert.Equal("+", ie2.operator)
-                testIntegerLiteral ie2.right 4
-            | Error msg -> Assert.Fail msg
+        
+            let infixTest = buildInfixExpressionTest 2 "+" 4
+            testResultInfix infix2 infixTest
 
             Assert.Equal("/", ie.operator)
             testIntegerLiteral ie.right 2
         | Error msg -> Assert.Fail msg
 
     [<Fact>]
-    let ``Can parse let statement`` () =
+    let ``Can parse simple let statement`` () =
         let input = "let x = 3;"
 
         let lexer = Lexer.createLexer input
@@ -230,6 +218,29 @@ module ParserTests =
         | Ok ls ->
             Assert.Equal("x", ls.name.value)
             testIntegerLiteral ls.value 3
+        | Error msg -> Assert.Fail msg
+
+    [<Fact>]
+    let ``Can parse addition let statement`` () =
+        let input = "let distance = 3 + 2;"
+
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+
+        AssertNoParseErrors parser
+
+        Assert.Equal(1, modd.statements.Length)
+
+        let letState = asLetStatement modd.statements.[0]
+
+        match letState with
+        | Ok ls ->
+            Assert.Equal("distance", ls.name.value)
+
+            let infix2 = asInfix ls.value
+            let infixTest = buildInfixExpressionTest 3 "+" 2
+            testResultInfix infix2 infixTest
         | Error msg -> Assert.Fail msg
 
 

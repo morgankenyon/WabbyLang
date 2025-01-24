@@ -15,4 +15,11 @@ module Helpers =
 
         let main = instance.GetFunction<int32>("main")
         main.Invoke()
+    let printWasm (bytes: byte array) =
+        let stringRepresentation = bytes
+                                    |> Array.map (fun by -> by.ToString())
+                                    |> String.concat ""
+        //let str = stringRepresentation |> String.concat ""
+        System.IO.File.WriteAllText("./atest.txt", stringRepresentation)
+        System.IO.File.WriteAllBytes("./atest.wasm", bytes)
 

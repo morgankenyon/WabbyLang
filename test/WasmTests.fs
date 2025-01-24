@@ -206,7 +206,7 @@ module WasmTests =
         let codesec = Wasm.codesec [| code |]
 
         let bytes = Wasm.modd [| typesec; funcsec; exportsec; codesec |]
-        printWasm bytes
+        //printWasm bytes
 
         let engine = new Engine()
 
@@ -317,3 +317,21 @@ module WasmTests =
         let result = runWithInt32Return wasmBytes
 
         Assert.Equal(2, result)
+    
+    [<Fact>]
+    let ``Can build simple symbol table`` () =
+        let valueTokenPair = { Token = Token.NUMBER; Literal = "6" }
+        let value = new Ast.IntegerLiteral(valueTokenPair, 6)
+
+        let identifierTokenPair = { Token = Token.IDENT; Literal = "test" }
+        let identifier = new Ast.Identifier(identifierTokenPair, "test")
+        
+        let letTokenPair = { Token = Token.LET; Literal = "let" }
+        let letStatement = new Ast.LetStatement(letTokenPair, identifier, value)
+        
+        let modd = new Ast.Module([| letStatement |])
+
+        let symbolMap = Wasm.buildSymbolMap modd
+
+        Assert.Equal(1, symbolMap.Count)
+        Assert.True(symbolMap.ContainsKey("test"))
