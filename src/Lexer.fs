@@ -61,6 +61,9 @@
             match l.ch with
             | '\000' -> (Token.EOF, "")
             | '+' -> (Token.PLUS, l.ch.ToString())
+            | '-' -> (Token.MINUS, l.ch.ToString())
+            | '*' -> (Token.ASTERISK, l.ch.ToString())
+            | '/' -> (Token.SLASH, l.ch.ToString())
             | _ -> nextComplexToken l
 
         let token = { Token = tokenType; Literal = literal }

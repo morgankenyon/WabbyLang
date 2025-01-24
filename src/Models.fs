@@ -7,6 +7,9 @@
         | NUMBER
         //operators
         | PLUS
+        | MINUS
+        | ASTERISK
+        | SLASH
         //delimeters
         | PERIOD
         | NEW_LINE

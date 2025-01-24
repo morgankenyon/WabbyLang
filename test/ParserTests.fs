@@ -11,6 +11,8 @@ module ParserTests =
         match s with
         | :? Ast.InfixExpression as ie -> true
         | _ -> false
+    let asInfix (s: Ast.Expression) =
+        s :?> Ast.InfixExpression
 
     let testIntegerLiteral (il : Ast.Expression) (value) =
         Assert.True(isInteger il)
@@ -68,5 +70,72 @@ module ParserTests =
         testIntegerLiteral ie.left 2
         Assert.Equal("+", ie.operator)
         testIntegerLiteral ie.right 4
+
+    [<Fact>]
+    let ``Can parse combined arithmetic expression`` () =
+        let input = "2 + 4 - 1"
+
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+
+        AssertNoParseErrors parser
+
+        Assert.Equal(1, modd.expressions.Length)
+
+        Assert.True(canDowncastToInfixExpression(modd.expressions.[0]), "cannot downcast to expression")
+
+        let ie = asInfix modd.expressions.[0]
+
+        Assert.True(canDowncastToInfixExpression ie.left)
+
+        let ie2 = asInfix ie.left 
+
+        testIntegerLiteral ie2.left 2
+        Assert.Equal("+", ie2.operator)
+        testIntegerLiteral ie2.right 4
+
+        Assert.Equal("-", ie.operator)
+        testIntegerLiteral ie.right 1
+
+    [<Fact>]
+    let ``Can parse multiplication expression`` () =
+        let input = "2 * 4"
+
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+
+        AssertNoParseErrors parser
+
+        Assert.Equal(1, modd.expressions.Length)
+
+        Assert.True(canDowncastToInfixExpression(modd.expressions.[0]), "cannot downcast to expression")
+
+        let ie = modd.expressions.[0] :?> Ast.InfixExpression
+
+        testIntegerLiteral ie.left 2
+        Assert.Equal("*", ie.operator)
+        testIntegerLiteral ie.right 4
+
+    [<Fact>]
+    let ``Can parse division expression`` () =
+        let input = "4 / 2"
+
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+
+        AssertNoParseErrors parser
+
+        Assert.Equal(1, modd.expressions.Length)
+
+        Assert.True(canDowncastToInfixExpression(modd.expressions.[0]), "cannot downcast to expression")
+
+        let ie = modd.expressions.[0] :?> Ast.InfixExpression
+
+        testIntegerLiteral ie.left 4
+        Assert.Equal("/", ie.operator)
+        testIntegerLiteral ie.right 2
 
 

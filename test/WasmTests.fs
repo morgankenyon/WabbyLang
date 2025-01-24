@@ -5,7 +5,10 @@ module WasmTests =
     open System
     open Xunit
     open Waux.Lang
+    open Models
     open Wasmtime
+    open Helpers
+
 
     let printWasm (bytes: byte array) =
         let stringRepresentation = bytes
@@ -215,3 +218,90 @@ module WasmTests =
         let instance = linker.Instantiate(store, modd)
 
         Assert.True(true)
+    [<Fact>]
+    let ``Can convert IntegerLiteral Ast Module to WasmTree`` () =
+        let tokenPair = { Token = Token.NUMBER; Literal = "5" }
+        let literal = new Ast.IntegerLiteral(tokenPair, 5)
+
+        let modd = new Ast.Module([| literal |])
+
+        //let wasmTree = Wasm.generateWasm modd
+        let wasmBytes = Wasm.toWasm modd
+
+        Assert.True(true)
+    
+    [<Fact>]
+    let ``Can convert addition InfixExpression Ast Module to WasmTree`` () =
+        let leftTokenPair = { Token = Token.NUMBER; Literal = "5" }
+        let leftExpr = new Ast.IntegerLiteral(leftTokenPair, 5)
+
+        let rightTokenPair = { Token = Token.NUMBER; Literal = "2" }
+        let rightExpr = new Ast.IntegerLiteral(rightTokenPair, 2)
+
+        let operatorTokenPair = { Token = Token.PLUS; Literal = "+" }
+
+        let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
+
+        let modd = new Ast.Module([| infixExpr |])
+
+        let wasmTree = Wasm.toWasm modd
+
+        Assert.True(true)
+    
+    [<Fact>]
+    let ``Can convert subtraction InfixExpression Ast Module to WasmTree`` () =
+        let leftTokenPair = { Token = Token.NUMBER; Literal = "5" }
+        let leftExpr = new Ast.IntegerLiteral(leftTokenPair, 5)
+
+        let rightTokenPair = { Token = Token.NUMBER; Literal = "2" }
+        let rightExpr = new Ast.IntegerLiteral(rightTokenPair, 2)
+
+        let operatorTokenPair = { Token = Token.MINUS; Literal = "-" }
+
+        let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
+
+        let modd = new Ast.Module([| infixExpr |])
+
+        let wasmTree = Wasm.toWasm modd
+
+        Assert.True(true)
+    
+    [<Fact>]
+    let ``Can convert multiplication InfixExpression Ast Module to WasmTree`` () =
+        let leftTokenPair = { Token = Token.NUMBER; Literal = "4" }
+        let leftExpr = new Ast.IntegerLiteral(leftTokenPair, 4)
+
+        let rightTokenPair = { Token = Token.NUMBER; Literal = "2" }
+        let rightExpr = new Ast.IntegerLiteral(rightTokenPair, 2)
+
+        let operatorTokenPair = { Token = Token.ASTERISK; Literal = "*" }
+
+        let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
+
+        let modd = new Ast.Module([| infixExpr |])
+
+        let wasmBytes = Wasm.toWasm modd
+                
+        let result = runWithInt32Return wasmBytes
+
+        Assert.Equal(8, result)
+    
+    [<Fact>]
+    let ``Can convert division InfixExpression Ast Module to WasmTree`` () =
+        let leftTokenPair = { Token = Token.NUMBER; Literal = "6" }
+        let leftExpr = new Ast.IntegerLiteral(leftTokenPair, 6)
+
+        let rightTokenPair = { Token = Token.NUMBER; Literal = "3" }
+        let rightExpr = new Ast.IntegerLiteral(rightTokenPair, 3)
+
+        let operatorTokenPair = { Token = Token.SLASH; Literal = "/" }
+
+        let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
+
+        let modd = new Ast.Module([| infixExpr |])
+
+        let wasmBytes = Wasm.toWasm modd
+                
+        let result = runWithInt32Return wasmBytes
+
+        Assert.Equal(2, result)

@@ -20,9 +20,9 @@ module Parser =
             //.Add(TokenType.LT, ExprPrecedence.LESSGREATER)
             //.Add(TokenType.GT, ExprPrecedence.LESSGREATER)
             .Add(Token.PLUS, ExprPrecedence.SUM)
-            //.Add(TokenType.MINUS, ExprPrecedence.SUM)
-            //.Add(TokenType.SLASH, ExprPrecedence.PRODUCT)
-            //.Add(TokenType.ASTERISK, ExprPrecedence.PRODUCT)
+            .Add(Token.MINUS, ExprPrecedence.SUM)
+            .Add(Token.SLASH, ExprPrecedence.PRODUCT)
+            .Add(Token.ASTERISK, ExprPrecedence.PRODUCT)
             //.Add(TokenType.LPAREN, ExprPrecedence.CALL)
             //.Add(TokenType.LBRACKET, ExprPrecedence.INDEX)
 
@@ -138,12 +138,12 @@ module Parser =
         //prefixFns.Add(TokenType.LBRACKET, parseArrayLiteral)
         //prefixFns.Add(TokenType.LBRACE, parseHashLiteral)
 
-        //regist infix parse functions
+        //register infix parse functions
         let infixFns = new System.Collections.Generic.Dictionary<Token, infixParse>()
         infixFns.Add(Token.PLUS, parseInfixExpression)
-        //infixFns.Add(TokenType.MINUS, parseInfixExpression)
-        //infixFns.Add(TokenType.SLASH, parseInfixExpression)
-        //infixFns.Add(TokenType.ASTERISK, parseInfixExpression)
+        infixFns.Add(Token.MINUS, parseInfixExpression)
+        infixFns.Add(Token.SLASH, parseInfixExpression)
+        infixFns.Add(Token.ASTERISK, parseInfixExpression)
         //infixFns.Add(TokenType.EQ, parseInfixExpression)
         //infixFns.Add(TokenType.NOT_EQ, parseInfixExpression)
         //infixFns.Add(TokenType.LT, parseInfixExpression)

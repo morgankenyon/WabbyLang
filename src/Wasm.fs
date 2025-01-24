@@ -23,6 +23,10 @@ module Wasm =
     [<Literal>]
     let INSTR_i32_SUB = 107uy
     [<Literal>]
+    let INSTR_i32_MUL = 108uy
+    [<Literal>]
+    let INSTR_i32_DIV_S = 109uy
+    [<Literal>]
     let i64_VAL_TYPE = 126uy
     [<Literal>]
     let INSTR_i64_CONST = 66uy
@@ -41,6 +45,10 @@ module Wasm =
     type WasmValueBytes =
     | Value of byte
     | Values of byte array
+
+    type WasmTree =
+    | Empty
+    | Node of value: WasmValueBytes array option * inners: WasmTree array option
 //    const valtype = {
 //  i32: 0x7f,
 //  i64: 0x7e,
@@ -121,74 +129,122 @@ module Wasm =
         |> section SECTION_ID_EXPORT
 
     //Code section
-    let code (func: byte array) =
-        let normalizedSize = i32 func.Length
-        Array.concat [ [| normalizedSize |]; func ]
+        
 
     let func (locals: byte array) (body: byte array) =
         let localsVec = vec locals
         Array.concat [ localsVec; body ]
 
+    let code (func: byte array) =
+        let normalizedSize = i32 func.Length
+        Array.concat [ [| normalizedSize |]; func ]
+
     let codesec (codes: byte array array) =
         vecFlatten codes
         |> section SECTION_ID_CODE
+
+    //let codeSecTree (locals: WasmTree) (body: WasmTree) =
+    //    match locals, body with
+    //    | Node (lv, li), Empty ->
+    //        //vec - size
+    //        let localVec = i32 i.Value.Length
+    //        let funcSize = localVec
+    //        //let normalizedSize = i32 n.
+    //    | Empty ->
 
 
     let modd(sections: byte array array) =
         let flattenedSections = sections
                                 |> Array.collect id
         Array.concat [ magic(); version(); flattenedSections ]
+    
+    let getOperator op =
+        match op with
+        | "+" -> INSTR_i32_ADD
+        | "-" -> INSTR_i32_SUB
+        | "*" -> INSTR_i32_MUL
+        | "/" -> INSTR_i32_DIV_S
+        | _ -> 11uy
 
-    let rec private expressionToWasm (expr : Ast.Expression) : WasmValueBytes array =
-        let mutable wasmBytes : WasmValueBytes array option = None
+    let rec private expressionToWasmTree (expr : Ast.Expression) : WasmTree =
+        let mutable wasmTree : WasmTree option = None
         let aType = expr.AType()
         match aType with
         | Ast.AstType.IntegerLiteral ->
             let integerLiteral = expr :?> Ast.IntegerLiteral
             let value = i32 integerLiteral.value
-            wasmBytes <- Some [| Value INSTR_i32_CONST; Value value |]
+            let wasmBytes = [| INSTR_i32_CONST; value |]
+            let node = Node (Some [| Values wasmBytes |], None )
+            node
         | Ast.AstType.InfixExpression ->
             let infixExpression = expr :?> Ast.InfixExpression
-            let leftValue = expressionToWasm infixExpression.left
-            let operator = 
-                if infixExpression.operator = "+" 
-                then INSTR_i32_ADD
-                else INSTR_i32_SUB
-            let rightValue = expressionToWasm infixExpression.right
-            wasmBytes <- Some [| Values leftValue; Values rightValue; Value operator |]
+            let leftValue = expressionToWasmTree infixExpression.left
+            let operator = getOperator infixExpression.operator
+            let operatorValue = Node (Some [| Value operator |], None)
+            let rightValue = expressionToWasmTree infixExpression.right
+            let inner = [| leftValue; rightValue; operatorValue |]
+            let node = Node (None, Some inner)
+            node
         | _ -> 
-            wasmBytes <- None
+            Empty
+            //wasmTree <- None
 
-        match wasmBytes with
-        | Some bytes ->
-            Array.concat [ bytes; [| INSTR_END |] ]
-        | None -> 
-            let emptyBytes: byte [] = Array.zeroCreate 0
-            emptyBytes
+        //wasmTree
+    let private generateBytes (bytes: byte array) (v: WasmValueBytes) =
+        match v with
+        | Value vv ->
+            Array.concat [ bytes; [| vv |] ]
+        | Values vvs ->
+            Array.concat [ bytes; vvs ]
 
-    let generateWasm (codeModule : Ast.Module) =
-        let mutable wasmBytes : byte array option = None
-        for expr in codeModule.expressions do
-            //let aType = expr.AType()
-            let aType = expr.AType()
-            match aType with
-            | Ast.AstType.IntegerLiteral ->
-                let integerLiteral = expr :?> Ast.IntegerLiteral
-                let value = i32 integerLiteral.value
-                wasmBytes <- Some [| INSTR_i32_CONST; value |]
-            //| Ast.AstType.InfixExpression ->
-            //    let infixExpression = expr :?> Ast.InfixExpression
-            //    let leftValue = i32 infixExpression.left
-            //    let operator = infixExpression.operator
-            //    let rightValue = i32 infixExpression.right
-            | _ ->
-                wasmBytes <- None
-        match wasmBytes with
-        | Some bytes ->
-            Array.concat [ bytes; [| INSTR_END |] ]
-        | None -> 
-            let emptyBytes: byte [] = Array.zeroCreate 0
-            emptyBytes
+    let rec private wasmTreeToBytes (tree : WasmTree) : byte array =
+        match tree with
+        | Empty -> [| |]
+        | Node (value, inners) when value.IsSome && inners.IsNone ->
+            let vals = value.Value
+            let mutable bytes: byte array = [| |]
+            for v in vals do
+                bytes <- generateBytes bytes v
+            bytes
+        | Node (value, inners) when value.IsNone && inners.IsSome ->
+            let vals = inners.Value
+            let mutable bytes: byte array = [| |]
+            for v in vals do
+                let innerBytes = wasmTreeToBytes v
+                bytes <- Array.concat [ bytes; innerBytes ]
+            bytes
+        | _ -> [| |]
+
+
+    let generateWasm (codeModule : Ast.Module) : byte array =
+        let firstExpr = codeModule.expressions.[0]
+        let wasmTree = expressionToWasmTree firstExpr
+        let bytes = wasmTreeToBytes wasmTree
+        ///Array.concat [ bytes; [| INSTR_END |] ]
+        Array.concat [ bytes; [| INSTR_END |] ]
+
+        //let mutable wasmBytes : byte array option = None
+        //for expr in codeModule.expressions do
+        //    //let aType = expr.AType()
+        //    let aType = expr.AType()
+        //    match aType with
+        //    | Ast.AstType.IntegerLiteral ->
+        //        let integerLiteral = expr :?> Ast.IntegerLiteral
+        //        let value = i32 integerLiteral.value
+        //        wasmBytes <- Some [| INSTR_i32_CONST; value |]
+        //    //| Ast.AstType.InfixExpression ->
+        //    //    let infixExpression = expr :?> Ast.InfixExpression
+        //    //    let leftValue = i32 infixExpression.left
+        //    //    let operator = infixExpression.operator
+        //    //    let rightValue = i32 infixExpression.right
+        //    | _ ->
+        //        wasmBytes <- None
+        //match wasmBytes with
+        //| Some bytes ->
+        //    Array.concat [ bytes; [| INSTR_END |] ]
+        //| None -> 
+        //    let emptyBytes: byte [] = Array.zeroCreate 0
+        //    emptyBytes
         
 
     let toWasm (codeModule : Ast.Module) =
@@ -213,7 +269,7 @@ module Wasm =
         let functions = 
             generateWasm codeModule
             |> func emptyBytes
-        //let func = func emptyBytes generateWasm codeModule
+        //let functions = func emptyBytes emptyBytes
         let code = code functions
         let codesec = codesec [| code |]
 

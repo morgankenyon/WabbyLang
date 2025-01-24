@@ -30,7 +30,7 @@ module LexerTests =
         expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
 
     [<Fact>]
-    let ``Can Lex Basic Arithmetic`` () =
+    let ``Can Lex Basic Addition`` () =
         let expectedTokens =
             [
                 { Token = Token.NUMBER ; Literal = "2" }
@@ -40,5 +40,63 @@ module LexerTests =
             ]
     
         let input = "2 + 1"
+        let lexer = Lexer.createLexer input
+        expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
+
+    [<Fact>]
+    let ``Can Lex Basic Subtraction`` () =
+        let expectedTokens =
+            [
+                { Token = Token.NUMBER ; Literal = "2" }
+                { Token = Token.MINUS ; Literal = "-" }
+                { Token = Token.NUMBER ; Literal = "1" }
+                { Token = Token.EOF ; Literal = "" };
+            ]
+    
+        let input = "2 - 1"
+        let lexer = Lexer.createLexer input
+        expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
+
+    [<Fact>]
+    let ``Can Lex combined operation Subtraction`` () =
+        let expectedTokens =
+            [
+                { Token = Token.NUMBER ; Literal = "2" }
+                { Token = Token.MINUS ; Literal = "-" }
+                { Token = Token.NUMBER ; Literal = "1" }
+                { Token = Token.PLUS ; Literal = "+" }
+                { Token = Token.NUMBER ; Literal = "3" }
+                { Token = Token.EOF ; Literal = "" };
+            ]
+    
+        let input = "2 - 1 + 3"
+        let lexer = Lexer.createLexer input
+        expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
+
+    [<Fact>]
+    let ``Can Lex multiplication`` () =
+        let expectedTokens =
+            [
+                { Token = Token.NUMBER ; Literal = "2" }
+                { Token = Token.ASTERISK ; Literal = "*" }
+                { Token = Token.NUMBER ; Literal = "3" }
+                { Token = Token.EOF ; Literal = "" };
+            ]
+    
+        let input = "2 * 3"
+        let lexer = Lexer.createLexer input
+        expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
+
+    [<Fact>]
+    let ``Can Lex division`` () =
+        let expectedTokens =
+            [
+                { Token = Token.NUMBER ; Literal = "4" }
+                { Token = Token.SLASH ; Literal = "/" }
+                { Token = Token.NUMBER ; Literal = "2" }
+                { Token = Token.EOF ; Literal = "" };
+            ]
+    
+        let input = "4 / 2"
         let lexer = Lexer.createLexer input
         expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))

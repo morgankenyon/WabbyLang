@@ -36,4 +36,6 @@ module EndToEnd =
 
         linker.Instantiate(store, modd) |> ignore
 
+        wasmBytes
+
 
