@@ -19,7 +19,7 @@ Why Waux? What does that word mean? How do you pronounce it?
 
 ## Current Examples
 
-Right now I have basic mathematical operations compiling into wasm:
+Right now I have basic mathematical operations compiling into wasm. For the examples below, I'm converting the compiled wasm to wat for visual purposes. But the output of the compiler is wasm byte code.
 
 ### Adding
 
@@ -36,4 +36,42 @@ Compiles into:
     (i32.add
       (i32.const 5)
       (i32.const 2))))
+```
+
+### Subtraction
+
+`10 - 2`
+
+Compiles into:
+
+```wat
+(module
+  (type $t0 (func (result i32)))
+  (func $main (export "main") (type $t0) (result i32)
+    (i32.sub
+      (i32.const 10)
+      (i32.const 2))))
+```
+
+### Operator Precedence
+
+It also currently handles operator precedence:
+
+`10 + 10 / 5 * 2 - 1`
+
+Compiles into:
+
+```wat
+(module
+  (type $t0 (func (result i32)))
+  (func $main (export "main") (type $t0) (result i32)
+    (i32.sub
+      (i32.add
+        (i32.const 10)
+        (i32.mul
+          (i32.div_s
+            (i32.const 10)
+            (i32.const 5))
+          (i32.const 2)))
+      (i32.const 1))))
 ```
