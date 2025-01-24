@@ -23,7 +23,7 @@ module Parser =
             .Add(Token.MINUS, ExprPrecedence.SUM)
             .Add(Token.SLASH, ExprPrecedence.PRODUCT)
             .Add(Token.ASTERISK, ExprPrecedence.PRODUCT)
-            //.Add(TokenType.LPAREN, ExprPrecedence.CALL)
+            .Add(Token.LPAREN, ExprPrecedence.CALL)
             //.Add(TokenType.LBRACKET, ExprPrecedence.INDEX)
 
     type prefixParse = ParserState -> Ast.Expression option
@@ -68,6 +68,10 @@ module Parser =
             p.errors.Add(errorMsg)
             None
 
+    let peekError (p: ParserState) (t: Token) =
+        let msg = sprintf "expected next token to be %s, got %s instead" (t.ToString()) (p.peekToken.Token.ToString())
+        p.errors.Add(msg)
+
     let getTokenPrecedence tokenType =
         match PrecedenceMap.ContainsKey tokenType with
         | true ->
@@ -78,6 +82,15 @@ module Parser =
 
     let peekPrecedence p =
         getTokenPrecedence p.peekToken.Token
+
+    let expectPeek (p: ParserState) (t: Token) =
+        match peekTokenIs p t with
+        | true -> 
+            nextToken p 
+            true
+        | false -> 
+            peekError p t
+            false
 
     let curPrecedence p =
         getTokenPrecedence p.curToken.Token
@@ -100,6 +113,42 @@ module Parser =
             p.errors.Add(sprintf "no prefix parse function for %s found" p.curToken.Literal)
             None
 
+    let parseLetStatement (p: ParserState) =
+        let letToken = p.curToken
+
+        if not (expectPeek p Token.IDENT) then
+            None
+        else
+            let identStatement = new Ast.Identifier(p.curToken, p.curToken.Literal)
+
+            if not (expectPeek p Token.ASSIGN) then
+                None
+            else
+                nextToken p
+
+                let value = parseExpression p ExprPrecedence.LOWEST
+
+                while not (curTokenIs p Token.SEMICOLON) && not (curTokenIs p Token.EOF) do
+                    nextToken p
+
+                if curTokenIs p Token.EOF then
+                    p.errors.Add(sprintf "Let statement identified as \"%s\" needs an ending semicolon" identStatement.value)
+                    None
+                else
+                    match value with
+                    | Some v ->
+                        let letStatement = new Ast.LetStatement(letToken, identStatement, v)
+                        Some (letStatement :> Ast.Statement)
+                    | None -> None
+    let parseGroupedExpression p =
+        nextToken p
+
+        match parseExpression p ExprPrecedence.LOWEST with
+        | Some expression ->
+            if not (expectPeek p Token.RPAREN) then None
+            else Some expression
+        | None -> None
+
     let parseInfixExpression p left =
         let curToken = p.curToken
 
@@ -113,11 +162,23 @@ module Parser =
             |> toSomeExpr
         | None -> None
 
+    let parseExpressionStatement p =
+        let curToken = p.curToken
+        
+        match parseExpression p ExprPrecedence.LOWEST with
+        | Some expression ->
+            let statement = new Ast.ExpressionStatement (curToken, expression)
+
+            if peekTokenIs p Token.SEMICOLON then nextToken p
+
+            Some (statement :> Ast.Statement)
+        | None -> None
+
     let parseStatement (p: ParserState) =
         match p.curToken.Token with 
-        //| Token.LET -> parseLetStatement p
+        | Token.LET -> parseLetStatement p
         //| TokenType.RETURN -> parseReturnStatement p
-        | _ -> parseExpression p ExprPrecedence.LOWEST
+        | _ -> parseExpressionStatement p
 
     let createParser lexer =
         let firstToken = Lexer.nextToken lexer
@@ -131,7 +192,7 @@ module Parser =
         //prefixFns.Add(TokenType.MINUS, parsePrefixExpression)
         //prefixFns.Add(TokenType.TRUE, parseBoolean)
         //prefixFns.Add(TokenType.FALSE, parseBoolean)
-        //prefixFns.Add(TokenType.LPAREN, parseGroupedExpression)
+        prefixFns.Add(Token.LPAREN, parseGroupedExpression)
         //prefixFns.Add(TokenType.IF, parseIfExpression)
         //prefixFns.Add(TokenType.FUNCTION, parseFunctionLiteral)
         //prefixFns.Add(TokenType.STRING, parseStringLiteral)
@@ -164,16 +225,16 @@ module Parser =
         parser
 
     let parseModule (parser: ParserState) : Ast.Module =
-        let expressoinList = new ResizeArray<Ast.Expression>()
+        let statementsList = new ResizeArray<Ast.Statement>()
 
         while not (curTokenIs parser Token.EOF) do
             match parseStatement parser with
             | Some statement -> 
-                expressoinList.Add(statement)
+                statementsList.Add(statement)
             | None -> ()
 
             nextToken parser
 
-        let expressions = expressoinList.ToArray()
+        let statements = statementsList.ToArray()
 
-        new Ast.Module(expressions)
+        new Ast.Module(statements)

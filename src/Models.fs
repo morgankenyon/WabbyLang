@@ -4,16 +4,22 @@
         | ILLEGAL
         | EOF
         //identifiers + literals
+        | IDENT
         | NUMBER
         //operators
+        | ASSIGN
         | PLUS
         | MINUS
         | ASTERISK
         | SLASH
         //delimeters
-        | PERIOD
+        //| PERIOD
         | NEW_LINE
         | SEMICOLON
+        | LPAREN
+        | RPAREN
+        //keywords
+        | LET
 
     type TokenPair =
         {

@@ -2,10 +2,27 @@
     open Models
 
     type ComplexTokenType =
-        //| Letter
+        | Letter
         | Digit
         | Illegal
 
+    let lookupIdent ident =
+        //if ident = "fn" then
+        //    FUNCTION
+        if ident = "let" then
+            LET
+        //else if ident = "if" then
+        //    IF
+        //else if ident = "else" then
+        //    ELSE
+        //else if ident = "return" then
+        //    RETURN
+        //else if ident = "true" then
+        //    TRUE
+        //else if ident = "false" then
+        //    FALSE
+        else
+            IDENT
     let readChar (l: LexerState) =
         let newChar =
             match l.readPosition >= l.input.Length with
@@ -24,6 +41,19 @@
     let isDigit(ch: char) =
         ch.CompareTo('0') >= 0 && ch.CompareTo('9') <= 0
 
+    let canReadLetter(l: LexerState) =
+        //ensure I can read next position
+        let canReadNextPosition = l.position + 1 < l.input.Length
+        canReadNextPosition && isLetter(l.input.Chars(l.position + 1))
+
+    let readIdentifier(l: LexerState) =
+        let pos = l.position
+        while canReadLetter(l) do
+            readChar l
+        let literal = l.input.Substring(pos, (l.position - pos + 1))
+        let tokenType = lookupIdent literal
+        (tokenType, literal)
+
     let canReadDigit(l: LexerState) =
         //ensure I can read next position
         let canReadNextPosition = l.position + 1 < l.input.Length
@@ -37,16 +67,16 @@
         (NUMBER, literal)
 
     let findComplexTokenType l =
-        //if isLetter(l.ch) then
-        //    Letter
-        if isDigit(l.ch) then
+        if isLetter(l.ch) then
+            Letter
+        else if isDigit(l.ch) then
             Digit
         else
             Illegal
 
     let nextComplexToken(l: LexerState) =
         match findComplexTokenType(l) with 
-        //| Letter -> readIdentifier(l)
+        | Letter -> readIdentifier(l)
         | Digit -> readNumber(l)
         | Illegal -> (Token.ILLEGAL, l.ch.ToString())
 
@@ -64,6 +94,10 @@
             | '-' -> (Token.MINUS, l.ch.ToString())
             | '*' -> (Token.ASTERISK, l.ch.ToString())
             | '/' -> (Token.SLASH, l.ch.ToString())
+            | '(' -> (Token.LPAREN, l.ch.ToString())
+            | ')' -> (Token.RPAREN, l.ch.ToString())
+            | '=' -> (Token.ASSIGN, l.ch.ToString())
+            | ';' -> (Token.SEMICOLON, l.ch.ToString())
             | _ -> nextComplexToken l
 
         let token = { Token = tokenType; Literal = literal }

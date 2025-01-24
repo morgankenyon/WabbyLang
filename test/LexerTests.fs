@@ -100,3 +100,35 @@ module LexerTests =
         let input = "4 / 2"
         let lexer = Lexer.createLexer input
         expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
+
+    [<Fact>]
+    let ``Can Lex parenthesis`` () =
+        let expectedTokens =
+            [
+                { Token = Token.LPAREN ; Literal = "(" }
+                { Token = Token.NUMBER ; Literal = "4" }
+                { Token = Token.SLASH ; Literal = "/" }
+                { Token = Token.NUMBER ; Literal = "2" }
+                { Token = Token.RPAREN ; Literal = ")" }
+                { Token = Token.EOF ; Literal = "" };
+            ]
+    
+        let input = "(4 / 2)"
+        let lexer = Lexer.createLexer input
+        expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
+
+    [<Fact>]
+    let ``Can Lex let statement`` () =
+        let expectedTokens =
+            [
+                { Token = Token.LET ; Literal = "let" }
+                { Token = Token.IDENT ; Literal = "x" }
+                { Token = Token.ASSIGN ; Literal = "=" }
+                { Token = Token.NUMBER ; Literal = "3" }
+                { Token = Token.SEMICOLON ; Literal = ";" }
+                { Token = Token.EOF ; Literal = "" };
+            ]
+    
+        let input = "let x = 3;"
+        let lexer = Lexer.createLexer input
+        expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))

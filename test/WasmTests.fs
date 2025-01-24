@@ -223,12 +223,15 @@ module WasmTests =
         let tokenPair = { Token = Token.NUMBER; Literal = "5" }
         let literal = new Ast.IntegerLiteral(tokenPair, 5)
 
-        let modd = new Ast.Module([| literal |])
+        let expressionStatement = new Ast.ExpressionStatement(tokenPair, literal)
 
-        //let wasmTree = Wasm.generateWasm modd
+        let modd = new Ast.Module([| expressionStatement |])
+
         let wasmBytes = Wasm.toWasm modd
 
-        Assert.True(true)
+        let result = runWithInt32Return wasmBytes
+
+        Assert.Equal(5, result)
     
     [<Fact>]
     let ``Can convert addition InfixExpression Ast Module to WasmTree`` () =
@@ -242,11 +245,14 @@ module WasmTests =
 
         let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
 
-        let modd = new Ast.Module([| infixExpr |])
+        let expressionStatement = new Ast.ExpressionStatement(operatorTokenPair, infixExpr)
+        let modd = new Ast.Module([| expressionStatement |])
 
-        let wasmTree = Wasm.toWasm modd
+        let wasmBytes = Wasm.toWasm modd
 
-        Assert.True(true)
+        let result = runWithInt32Return wasmBytes
+
+        Assert.Equal(7, result)
     
     [<Fact>]
     let ``Can convert subtraction InfixExpression Ast Module to WasmTree`` () =
@@ -259,12 +265,15 @@ module WasmTests =
         let operatorTokenPair = { Token = Token.MINUS; Literal = "-" }
 
         let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
+        
+        let expressionStatement = new Ast.ExpressionStatement(operatorTokenPair, infixExpr)
+        let modd = new Ast.Module([| expressionStatement |])
 
-        let modd = new Ast.Module([| infixExpr |])
+        let wasmBytes = Wasm.toWasm modd
 
-        let wasmTree = Wasm.toWasm modd
+        let result = runWithInt32Return wasmBytes
 
-        Assert.True(true)
+        Assert.Equal(3, result)
     
     [<Fact>]
     let ``Can convert multiplication InfixExpression Ast Module to WasmTree`` () =
@@ -278,10 +287,11 @@ module WasmTests =
 
         let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
 
-        let modd = new Ast.Module([| infixExpr |])
+        let expressionStatement = new Ast.ExpressionStatement(operatorTokenPair, infixExpr)
+        let modd = new Ast.Module([| expressionStatement |])
 
         let wasmBytes = Wasm.toWasm modd
-                
+
         let result = runWithInt32Return wasmBytes
 
         Assert.Equal(8, result)
@@ -297,8 +307,10 @@ module WasmTests =
         let operatorTokenPair = { Token = Token.SLASH; Literal = "/" }
 
         let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
-
-        let modd = new Ast.Module([| infixExpr |])
+        
+        let expressionStatement = new Ast.ExpressionStatement(operatorTokenPair, infixExpr)
+        
+        let modd = new Ast.Module([| expressionStatement |])
 
         let wasmBytes = Wasm.toWasm modd
                 
