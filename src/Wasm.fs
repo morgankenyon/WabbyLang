@@ -73,12 +73,7 @@ module Wasm =
             symbolType: SymbolType 
         }
     type SymbolMapDict = System.Collections.Generic.Dictionary<string, SymbolEntry>
-//    const valtype = {
-//  i32: 0x7f,
-//  i64: 0x7e,
-//  f32: 0x7d,
-//  f64: 0x7c,
-//};
+
     let stringToBytes (s: string) =
         System.Text.Encoding.UTF8.GetBytes(s)
 
@@ -96,9 +91,6 @@ module Wasm =
     let version () =
         // [0x01, 0x00, 0x00, 0x00]
         int32ToBytes(1)
-
-    //let u32 (v: int) =
-    //    if v <= 127 then byte v else 0uy
 
     let u32 (v: uint) =
         if v <= 127u then byte v else 0uy
@@ -154,19 +146,13 @@ module Wasm =
         vecFlatten exports
         |> section SECTION_ID_EXPORT
 
-    //Code section
-        
-
+    //Code Section
     let func (locals: byte array) (body: byte array) =
         let localsVec = vec locals
         Array.concat [ localsVec; body ]
     let funcNested (locals: byte array array) (body: byte array) =
         let localsVec = vecFlatten locals
         Array.concat [ localsVec; body ]
-
-    //let funcCombined (body: byte array) =
-    //    let localsVec = vec wasmBytes.locals
-    //    Array.concat [ localsVec; wasmBytes.body ]
 
     let code (func: byte array) =
         let normalizedSize = i32 func.Length
@@ -175,16 +161,6 @@ module Wasm =
     let codesec (codes: byte array array) =
         vecFlatten codes
         |> section SECTION_ID_CODE
-
-    //let codeSecTree (locals: WasmTree) (body: WasmTree) =
-    //    match locals, body with
-    //    | Node (lv, li), Empty ->
-    //        //vec - size
-    //        let localVec = i32 i.Value.Length
-    //        let funcSize = localVec
-    //        //let normalizedSize = i32 n.
-    //    | Empty ->
-
 
     let modd(sections: byte array array) =
         let flattenedSections = sections
@@ -197,13 +173,12 @@ module Wasm =
         | "-" -> INSTR_i32_SUB
         | "*" -> INSTR_i32_MUL
         | "/" -> INSTR_i32_DIV_S
-        | _ -> 11uy
+        | _ -> INSTR_END
 
     let resolveSymbols (symbolMap: SymbolMapDict) (name: string) =
         let containsKey = symbolMap.ContainsKey name
         match containsKey with
-        | true ->
-            
+        | true ->            
             let symbol = symbolMap[name]
             Ok symbol
         | false ->
@@ -300,8 +275,6 @@ module Wasm =
         let mutable bytes : byte array = [| |]
         for statement in codeModule.statements do
             let wasmTree = statementToWasmTree statement symbolMap
-            //let firstStatement = codeModule.statements.[0]
-            //let wasmTree = statementToWasmTree firstStatement symbolMap
             let wasmBytes = wasmTreeToBytes wasmTree
             bytes <- Array.concat [ bytes; wasmBytes ]
 
@@ -356,7 +329,7 @@ module Wasm =
         let functions = 
             generateWasm codeModule symbolMap
             |> funcNested [| localBytes |]
-        //let functions = func emptyBytes emptyBytes
+
         let code = code functions
         let codesec = codesec [| code |]
 

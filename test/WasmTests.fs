@@ -146,8 +146,6 @@ module WasmTests =
 
         Assert.True(true)
 
-
-
     [<Fact>]
     let ``Can use helper methods to craft empty module``() =
         let emptyBytes: byte [] = Array.zeroCreate 0

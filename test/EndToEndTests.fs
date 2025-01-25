@@ -87,11 +87,21 @@ module EndToEndTests =
     let ``Can compile and run double let statement`` () =
         let input = "let x = 42; let y = 1; x + y"
 
-        let bytes = EndToEnd.compileInstantiateAndPrint input true
+        let bytes = EndToEnd.compileInstantiateAndPrint input false
 
         let result = Helpers.runWithInt32Return bytes
 
         Assert.Equal(result, 43)
+
+    [<Fact>]
+    let ``Can compile and run more complex let statements`` () =
+        let input = "let x = 11 - 1; let y = 10 / 5; x + y * 2"
+
+        let bytes = EndToEnd.compileInstantiateAndPrint input true
+
+        let result = Helpers.runWithInt32Return bytes
+
+        Assert.Equal(result, 14)
 
 
 
