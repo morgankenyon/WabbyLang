@@ -39,3 +39,11 @@ module Helpers =
 
         letStatement
 
+    let buildIdentifierStatement (identifier: string) =
+        let identifierTokenPair = { Token = Token.IDENT; Literal = identifier }
+        let identifier = new Ast.Identifier(identifierTokenPair, identifier)
+
+        let expressionStatement = new Ast.ExpressionStatement(identifierTokenPair, identifier)
+        expressionStatement
+        
+

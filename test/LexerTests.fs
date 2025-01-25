@@ -132,3 +132,20 @@ module LexerTests =
         let input = "let x = 3;"
         let lexer = Lexer.createLexer input
         expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
+
+    [<Fact>]
+    let ``Can Lex let statement with identifier`` () =
+        let expectedTokens =
+            [
+                { Token = Token.LET ; Literal = "let" }
+                { Token = Token.IDENT ; Literal = "x" }
+                { Token = Token.ASSIGN ; Literal = "=" }
+                { Token = Token.NUMBER ; Literal = "3" }
+                { Token = Token.SEMICOLON ; Literal = ";" }
+                { Token = Token.IDENT ; Literal = "x" }
+                { Token = Token.EOF ; Literal = "" };
+            ]
+    
+        let input = "let x = 3; x"
+        let lexer = Lexer.createLexer input
+        expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))

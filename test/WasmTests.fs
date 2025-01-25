@@ -13,7 +13,7 @@ module WasmTests =
     let printWasm (bytes: byte array) =
         let stringRepresentation = bytes
                                     |> Array.map (fun by -> by.ToString())
-                                    |> String.concat ""
+                                    |> String.concat "; "
         //let str = stringRepresentation |> String.concat ""
         System.IO.File.WriteAllText("./atest.txt", stringRepresentation)
         System.IO.File.WriteAllBytes("./atest.wasm", bytes)
@@ -355,3 +355,42 @@ module WasmTests =
         Assert.Equal("test2", testEntry.name)
         Assert.Equal(1, testEntry.index)
         Assert.Equal(Wasm.SymbolType.Local, testEntry.symbolType)
+    
+    [<Fact>]
+    let ``Can retrieve from symbol table`` () =
+        let first = Helpers.buildLetStatement "test1" 6
+        let second = Helpers.buildLetStatement "test2" 16
+        
+        let modd = new Ast.Module([| first; second |])
+
+        let symbolMap = Wasm.buildSymbolMap modd
+
+        let firstResult = Wasm.resolveSymbols symbolMap first.name.value
+        let secondResult = Wasm.resolveSymbols symbolMap second.name.value
+
+        match firstResult with
+        | Ok fr ->
+            Assert.Equal("test1", fr.name)
+            Assert.Equal(0, fr.index)
+        | Error msg -> Assert.Fail msg
+        
+        match secondResult with
+        | Ok sr ->
+            Assert.Equal("test2", sr.name)
+            Assert.Equal(1, sr.index)
+        | Error msg -> Assert.Fail msg
+    
+    [<Fact>]
+    let ``Can convert LetStatement Ast Module to WasmTree`` () =        
+        let letStatement = Helpers.buildLetStatement "x" 42
+        let identifier = Helpers.buildIdentifierStatement "x"
+        
+        let modd = new Ast.Module([| letStatement; identifier |])
+
+        let wasmBytes = Wasm.toWasm modd
+                
+        printWasm wasmBytes
+
+        Assert.True(true)
+
+

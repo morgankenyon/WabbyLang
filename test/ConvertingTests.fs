@@ -20,3 +20,22 @@ module ConvertingTests =
         
         //let watText = modd.ToString();
         //Assert.NotEmpty(watText)
+
+    [<Fact>]
+    let ``Can convert book bytes to wasm program`` () =
+        //let x = 42; x
+        let numbers = [|      0; 97; 115; 109;   1;   0;   0;  0;  
+                1;  5; 1; 96;   0;   1; 127;   
+                3;   2;  1;  0;  7; 8;  1;   
+                4; 109;  97; 105; 110;  0;  0; 
+                10; 12;  1;  10;   1;   1; 127;  65; 42; 33;  0; 32;  0;  
+                11|]
+        let bytes = numbers |> Array.map (fun num -> (byte) num)
+        Assert.NotNull bytes
+        Helpers.printWasm bytes
+        //let engine = new Engine()
+
+        //let modd = Module.FromBytes(engine, "testLang", bytes)
+        
+        //let watText = modd.ToString();
+        //Assert.NotEmpty(watText)

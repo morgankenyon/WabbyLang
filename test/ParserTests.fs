@@ -13,11 +13,26 @@ module ParserTests =
         | :? Ast.LetStatement as letState ->
             Ok letState
         | _ -> Error "Not an let statement"
+    let asIdentifier (s: Ast.Expression) =
+        match s with
+        | :? Ast.Identifier as iden ->
+            Ok iden
+        | _ -> Error "Not an identifier"
     let asExpressionStatement (s: Ast.Statement) =
         match s with
         | :? Ast.ExpressionStatement as es -> 
             Ok es
         | _ -> Error "Not an expression statement"
+    let asIdentifierFromStatement (s: Ast.Statement) =
+        let asExprState = asExpressionStatement s
+        match asExprState with
+        | Ok es ->
+            let iden = asIdentifier es.expression
+            match iden with
+            | Ok id ->
+                Ok id
+            | Error msg -> Error msg
+        | Error msg -> Error msg
     //let asExpressionStatement (s: Ast.Statement) =
     //    s :?> Ast.ExpressionStatement
     let isInfix (s: Ast.Expression) =
@@ -218,6 +233,32 @@ module ParserTests =
         | Ok ls ->
             Assert.Equal("x", ls.name.value)
             testIntegerLiteral ls.value 3
+        | Error msg -> Assert.Fail msg
+
+    [<Fact>]
+    let ``Can parse simple let statement with identifier`` () =
+        let input = "let x = 3; x"
+
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+
+        AssertNoParseErrors parser
+
+        Assert.Equal(2, modd.statements.Length)
+
+        let letState = asLetStatement modd.statements.[0]
+
+        match letState with
+        | Ok ls ->
+            Assert.Equal("x", ls.name.value)
+            testIntegerLiteral ls.value 3
+        | Error msg -> Assert.Fail msg
+
+        let identifier = asIdentifierFromStatement modd.statements.[1]
+        match identifier with
+        | Ok iden ->
+            Assert.Equal("x", iden.value)
         | Error msg -> Assert.Fail msg
 
     [<Fact>]

@@ -149,6 +149,10 @@ module Parser =
             else Some expression
         | None -> None
 
+    let parseIdentifier  p =
+        new Ast.Identifier (p.curToken, p.curToken.Literal)
+        |> toSomeExpr
+
     let parseInfixExpression p left =
         let curToken = p.curToken
 
@@ -186,7 +190,7 @@ module Parser =
 
         //register prefix parse functions
         let prefixFns = new System.Collections.Generic.Dictionary<Token, prefixParse>()
-        //prefixFns.Add(TokenType.IDENT, parseIdentifier)
+        prefixFns.Add(Token.IDENT, parseIdentifier)
         prefixFns.Add(Token.NUMBER, parseIntegerLiteral)
         //prefixFns.Add(TokenType.BANG, parsePrefixExpression)
         //prefixFns.Add(TokenType.MINUS, parsePrefixExpression)
