@@ -335,4 +335,76 @@ module Wasm =
 
         let bytes = modd [| typesec; funcsec; exportsec; codesec |]
         bytes
+
+    let buildModuleClean (codeModule: Ast.Module) =
+        let emptyBytes: byte [] = Array.zeroCreate 0
+        let symbolMap = buildSymbolMap codeModule
+
+        //Creating type section
+        //need to figure out programmatically
+        let typesec = 
+            functype(emptyBytes, [| i32_VAL_TYPE |])
+            |> fun ft -> [| ft |]
+            |> typesec
+            
+        //creating func section
+        let funcsec =
+            [| 0uy |]
+            |> fun fs -> [| fs |]
+            |> funcsec
+
+        //creating export section
+        let exportsec = 
+            exportdesc(0uy)
+            |> export "main"
+            |> fun ed -> [| ed |]
+            |> exportsec
+
+        //creating code section
+        let codesec = 
+            generateWasm codeModule symbolMap
+            |> funcNested [| locals symbolMap.Count i32_VAL_TYPE |]
+            |> code
+            |> fun c -> [| c |]
+            |> codesec
+
+        let bytes = modd [| typesec; funcsec; exportsec; codesec |]
+        bytes
+
+    let buildModule () =
+        let emptyBytes: byte [] = Array.zeroCreate 0
+        //let symbolMap = buildSymbolMap codeModule
+
+        //creating code section
+        let mainFn = 
+            [| INSTR_i32_CONST; i32 42; INSTR_END |]
+            |> funcNested [| locals 1 i32_VAL_TYPE |]
+        let codesec = 
+            mainFn
+            |> code
+            |> fun c -> [| c |]
+            |> codesec
+
+        //Creating type section
+        //need to figure out programmatically
+        let typesec = 
+            functype(emptyBytes, [| i32_VAL_TYPE |])
+            |> fun ft -> [| ft |]
+            |> typesec
+            
+        //creating func section
+        let funcsec =
+            [| 0uy |]
+            |> fun fs -> [| fs |]
+            |> funcsec
+
+        //creating export section
+        let exportsec = 
+            exportdesc(0uy)
+            |> export "main"
+            |> fun ed -> [| ed |]
+            |> exportsec
+
+        let bytes = modd [| typesec; funcsec; exportsec; codesec |]
+        bytes
         

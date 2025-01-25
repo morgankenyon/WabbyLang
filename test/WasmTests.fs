@@ -379,7 +379,7 @@ module WasmTests =
         | Error msg -> Assert.Fail msg
     
     [<Fact>]
-    let ``Can convert LetStatement Ast Module to WasmTree`` () =        
+    let ``Can convert LetStatement Ast Module to WasmTree`` () =
         let letStatement = Helpers.buildLetStatement "x" 42
         let identifier = Helpers.buildIdentifierStatement "x"
         
@@ -387,6 +387,19 @@ module WasmTests =
 
         let wasmBytes = Wasm.toWasm modd
                 
+        //printWasm wasmBytes
+
+        Assert.True(true)
+    
+    [<Fact>]
+    let ``Can test build module`` () =
+        let wasmBytes = Wasm.buildModule()        
+                
+        let result = runWithInt32Return wasmBytes
+
+        Assert.Equal(42, result)
+
+       
         printWasm wasmBytes
 
         Assert.True(true)
