@@ -158,7 +158,8 @@ module Wasm =
         
 
     let func (locals: byte array) (body: byte array) =
-        Array.concat [ locals; body ]
+        let localsVec = vec locals
+        Array.concat [ localsVec; body ]
     let funcNested (locals: byte array array) (body: byte array) =
         let localsVec = vecFlatten locals
         Array.concat [ localsVec; body ]

@@ -73,5 +73,25 @@ module EndToEndTests =
 
         Assert.Equal(result, 13)
 
+    [<Fact>]
+    let ``Can compile and run simple let statement`` () =
+        let input = "let x = 42; x"
+
+        let bytes = EndToEnd.compileInstantiateAndPrint input false
+
+        let result = Helpers.runWithInt32Return bytes
+
+        Assert.Equal(result, 42)
+
+    [<Fact>]
+    let ``Can compile and run double let statement`` () =
+        let input = "let x = 42; let y = 1; x + y"
+
+        let bytes = EndToEnd.compileInstantiateAndPrint input true
+
+        let result = Helpers.runWithInt32Return bytes
+
+        Assert.Equal(result, 43)
+
 
 
