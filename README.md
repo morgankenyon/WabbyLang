@@ -75,3 +75,18 @@ Compiles into:
           (i32.const 2)))
       (i32.const 1))))
 ```
+
+### Variable Assignments
+
+`let x = 42; x`
+
+```wat
+(module
+  (type $t0 (func (result i32)))
+  (func $main (export "main") (type $t0) (result i32)
+    (local $l0 i32)
+    (local.set $l0
+      (i32.const 42))
+    (local.get $l0)))
+
+```
