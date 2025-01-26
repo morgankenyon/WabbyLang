@@ -7,7 +7,7 @@
         | Illegal
 
     let lookupIdent ident =
-        if ident = "fn" then
+        if ident = "func" then
             FUNC
         else if ident = "let" then
             LET

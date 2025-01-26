@@ -17,6 +17,14 @@ Why Waux? What does that word mean? How do you pronounce it?
     * Overall, I just needed to call it something.
     * But wanted something starting with Wa- to match Wasm, and it wasn't that bad of a word. 
 
+## Installing from Source
+
+TBD
+
+## Running
+
+TBD
+
 ## Current Examples
 
 Right now I have basic mathematical operations compiling into wasm. For the examples below, I'm converting the compiled wasm to wat for visual purposes. But the output of the compiler is wasm byte code.

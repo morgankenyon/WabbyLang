@@ -29,17 +29,17 @@ module ParserTests =
         match asExprState with
         | Ok es -> asIdentifier es.expression
         | Error msg -> Error msg
-    let asFunction (s: Ast.Expression) =
+    let asFunction (s: Ast.Statement) =
         match s with
-        | :? Ast.FunctionLiteral as fn ->
+        | :? Ast.FunctionStatement as fn ->
             Ok fn
         | _ -> Error "Not a function literal"
-    let asFunctionFromStatement (s: Ast.Statement) =
-        let asExprState = asExpressionStatement s
-        match asExprState with
-        | Ok es ->
-            asFunction es.expression
-        | Error msg -> Error msg
+    //let asFunctionFromStatement (s: Ast.Statement) =
+    //    let asExprState = asExpressionStatement s
+    //    match asExprState with
+    //    | Ok es ->
+    //        asFunction es.expression
+    //    | Error msg -> Error msg
     //let asExpressionStatement (s: Ast.Statement) =
     //    s :?> Ast.ExpressionStatement
     let isInfix (s: Ast.Expression) =
@@ -95,6 +95,19 @@ module ParserTests =
 
             testIdentifier infixExpr.right right
         | Error msg -> Assert.Fail msg
+
+    let testIntInfixExpression (ie : Ast.Expression) (left) (operator) (right) =
+        let infixResult = asInfix ie
+
+        match infixResult with
+        | Ok infixExpr ->
+
+            testIntegerLiteral infixExpr.left left
+
+            Assert.Equal(operator, infixExpr.operator)
+
+            testIntegerLiteral infixExpr.right right
+        | Error msg -> af msg
 
     let AssertNoParseErrors (p: Parser.ParserState) =
         //if errors, maybe print to err out
@@ -330,8 +343,8 @@ module ParserTests =
         | Error msg -> Assert.Fail msg
 
     [<Fact>]
-    let ``Can parse function literal``() =
-        let input = "fn(x, y) { x + y; };"
+    let ``Can parse function statement``() =
+        let input = "func add(x, y) { x + y; }"
 
         let lexer = Lexer.createLexer input
         let parser = Parser.createParser lexer
@@ -341,7 +354,7 @@ module ParserTests =
 
         Assert.Equal(1, modd.statements.Length)
 
-        let fnLit = asFunctionFromStatement modd.statements.[0]
+        let fnLit = asFunction modd.statements.[0]
 
         match fnLit with
         | Ok fn ->
@@ -363,8 +376,8 @@ module ParserTests =
         | Error msg -> Assert.Fail msg
 
     [<Fact>]
-    let ``Can parse function assigned to let statement``() =
-        let input = "let add = fn(x, y) { x + y; };"
+    let ``Can parse parameterless function literal``() =
+        let input = "func add() { 3 + 2; }"
 
         let lexer = Lexer.createLexer input
         let parser = Parser.createParser lexer
@@ -374,20 +387,86 @@ module ParserTests =
 
         Assert.Equal(1, modd.statements.Length)
 
-        let letResult = asLetStatement modd.statements.[0]
+        let fnLit = asFunction modd.statements.[0]
 
-        match letResult with
-        | Ok letState ->
-            testIdentifier letState.name "add"
+        match fnLit with
+        | Ok fn ->
+            Assert.Equal(0, fn.parameters.Length)
 
-            let funcResult = asFunction letState.value
+            let bodyStatement = fn.body.statements.[0]
+
+            let infixResult = asInfixFromStatement bodyStatement
+
+            match infixResult with
+            | Ok infix ->
+                testIntInfixExpression infix 3 "+" 2
+            | Error msg -> Assert.Fail msg
+
             
-            match funcResult with
-            | Ok fn ->
-                Assert.Equal(2, fn.parameters.Length)
+        | Error msg -> Assert.Fail msg
+
+    //[<Fact>]
+    //let ``Can parse function assigned to let statement``() =
+    //    let input = "fn(x, y) { x + y; };"
+
+    //    let lexer = Lexer.createLexer input
+    //    let parser = Parser.createParser lexer
+    //    let modd = Parser.parseModule parser
+
+    //    AssertNoParseErrors parser
+
+    //    Assert.Equal(1, modd.statements.Length)
+
+    //    let letResult = asLetStatement modd.statements.[0]
+
+    //    match letResult with
+    //    | Ok letState ->
+    //        testIdentifier letState.name "add"
+
+    //        let funcResult = asFunction letState.value
+            
+    //        match funcResult with
+    //        | Ok fn ->
+    //            Assert.Equal(2, fn.parameters.Length)
                 
-            | Error msg -> af msg
-        | Error msg -> af msg
+    //        | Error msg -> af msg
+    //    | Error msg -> af msg
+
+    //[<Fact>]
+    //let ``Can parse parameterless function assigned to let statement``() =
+    //    let input = "let add = fn() { 3 + 2; };"
+
+    //    let lexer = Lexer.createLexer input
+    //    let parser = Parser.createParser lexer
+    //    let modd = Parser.parseModule parser
+
+    //    AssertNoParseErrors parser
+
+    //    Assert.Equal(1, modd.statements.Length)
+
+    //    let letResult = asLetStatement modd.statements.[0]
+
+    //    match letResult with
+    //    | Ok letState ->
+    //        testIdentifier letState.name "add"
+
+    //        let funcResult = asFunction letState.value
+            
+    //        match funcResult with
+    //        | Ok fn ->
+    //            Assert.Equal(0, fn.parameters.Length)
+
+    //            let bodyStatement = fn.body.statements.[0]
+
+    //            let infixResult = asInfixFromStatement bodyStatement
+
+    //            match infixResult with
+    //            | Ok infix ->
+    //                testIntInfixExpression infix 3 "+" 2
+    //            | Error msg -> Assert.Fail msg
+                
+    //        | Error msg -> af msg
+    //    | Error msg -> af msg
         
 
 

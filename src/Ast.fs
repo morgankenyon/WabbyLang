@@ -7,11 +7,11 @@ module Ast =
     | ExpressionStatement
     | LetStatement
     | BlockStatement
+    | FunctionStatement
     type ExpressionType =
     | InfixExpression
     | IntegerLiteral
     | Identifier
-    | FunctionLiteral
 
     
     type AstType =
@@ -114,13 +114,14 @@ module Ast =
                     |> Array.map (fun s -> s.Str())
                     |> Array.reduce (fun a b -> a + b)
 
-    type FunctionLiteral(token: TokenPair, parameters: Identifier[], body: BlockStatement) =
+    type FunctionStatement(token: TokenPair, name: Identifier, parameters: Identifier[], body: BlockStatement) =
         member this.token = token
+        member this.name = name
         member this.parameters = parameters
         member this.body = body
-        interface Expression with
-            member this.NodeType = NodeType.Expression
-            member this.ExprType () = ExpressionType.FunctionLiteral
+        interface Statement with
+            member this.NodeType = NodeType.Statement
+            member this.StateType () = StatementType.FunctionStatement
             member this.TokenLiteral () = this.token.Literal
             member this.Str () = 
                 let paraStr = 

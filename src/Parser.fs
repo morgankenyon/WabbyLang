@@ -140,6 +140,31 @@ module Parser =
                         let letStatement = new Ast.LetStatement(letToken, identStatement, v)
                         Some (letStatement :> Ast.Statement)
                     | None -> None
+
+    let parseFunctionParameters p =
+        let identifiers = new ResizeArray<Ast.Identifier>()
+
+        if peekTokenIs p Token.RPAREN then
+            nextToken p
+            identifiers.ToArray()
+        else
+            nextToken p
+
+            let ident = new Ast.Identifier(p.curToken, p.curToken.Literal)
+            identifiers.Add(ident)
+
+            while peekTokenIs p Token.COMMA do
+                nextToken p
+                nextToken p
+                let iden = new Ast.Identifier(p.curToken, p.curToken.Literal)
+                identifiers.Add(iden)
+            
+            if not (expectPeek p Token.RPAREN) then
+                Array.empty<Ast.Identifier>
+            else identifiers.ToArray()
+
+    
+                
     let parseGroupedExpression p =
         nextToken p
 
@@ -178,34 +203,35 @@ module Parser =
             Some (statement :> Ast.Statement)
         | None -> None
 
-    let parseStatement (p: ParserState) =
-        match p.curToken.Token with 
+    
+    let rec parseStatement (p: ParserState) =
+        match p.curToken.Token with
+        | Token.FUNC -> parseFuncStatement p
         | Token.LET -> parseLetStatement p
         //| TokenType.RETURN -> parseReturnStatement p
         | _ -> parseExpressionStatement p
+    and parseFuncStatement (p: ParserState) =
+        let curToken = p.curToken
 
-    let parseFunctionParameters p =
-        let identifiers = new ResizeArray<Ast.Identifier>()
-
-        if peekTokenIs p Token.RPAREN then
-            nextToken p
-            identifiers.ToArray()
+        if not (expectPeek p Token.IDENT) then
+            None
         else
-            nextToken p
+            let identExpression = new Ast.Identifier(p.curToken, p.curToken.Literal)
 
-            let ident = new Ast.Identifier(p.curToken, p.curToken.Literal)
-            identifiers.Add(ident)
+            if not (expectPeek p Token.LPAREN) then
+                None
+            else
 
-            while peekTokenIs p Token.COMMA do
-                nextToken p
-                nextToken p
-                let iden = new Ast.Identifier(p.curToken, p.curToken.Literal)
-                identifiers.Add(iden)
-            
-            if not (expectPeek p Token.RPAREN) then
-                Array.empty<Ast.Identifier>
-            else identifiers.ToArray()
-    let parseBlockStatement p =
+                let parameters = parseFunctionParameters p
+
+                if not (expectPeek p Token.LBRACE) then
+                    None
+                else
+                    let body = parseBlockStatement p
+
+                    let functionStatement =new Ast.FunctionStatement(curToken, identExpression, parameters, body)
+                    Some (functionStatement :> Ast.Statement)
+    and parseBlockStatement p =
         
         let curToken = p.curToken
 
@@ -226,22 +252,45 @@ module Parser =
 
         block
 
-    let parseFunctionLiteral p =
-        let curToken = p.curToken
+    //let parseFunctionParameters p =
+    //    let identifiers = new ResizeArray<Ast.Identifier>()
 
-        if not (expectPeek p Token.LPAREN) then
-            None
-        else
+    //    if peekTokenIs p Token.RPAREN then
+    //        nextToken p
+    //        identifiers.ToArray()
+    //    else
+    //        nextToken p
 
-            let parameters = parseFunctionParameters p
+    //        let ident = new Ast.Identifier(p.curToken, p.curToken.Literal)
+    //        identifiers.Add(ident)
 
-            if not (expectPeek p Token.LBRACE) then
-                None
-            else
-                let body = parseBlockStatement p
+    //        while peekTokenIs p Token.COMMA do
+    //            nextToken p
+    //            nextToken p
+    //            let iden = new Ast.Identifier(p.curToken, p.curToken.Literal)
+    //            identifiers.Add(iden)
+            
+    //        if not (expectPeek p Token.RPAREN) then
+    //            Array.empty<Ast.Identifier>
+    //        else identifiers.ToArray()
 
-                new Ast.FunctionLiteral(curToken, parameters, body)
-                |> toSomeExpr
+
+    //let parseFunctionLiteral p =
+    //    let curToken = p.curToken
+
+    //    if not (expectPeek p Token.LPAREN) then
+    //        None
+    //    else
+
+    //        let parameters = parseFunctionParameters p
+
+    //        if not (expectPeek p Token.LBRACE) then
+    //            None
+    //        else
+    //            let body = parseBlockStatement p
+
+    //            new Ast.FunctionStatement(curToken, parameters, body)
+    //            |> toSomeExpr
 
 
 
@@ -259,7 +308,7 @@ module Parser =
         //prefixFns.Add(TokenType.FALSE, parseBoolean)
         prefixFns.Add(Token.LPAREN, parseGroupedExpression)
         //prefixFns.Add(TokenType.IF, parseIfExpression)
-        prefixFns.Add(Token.FUNC, parseFunctionLiteral)
+        //prefixFns.Add(Token.FUNC, parseFunctionLiteral)
         //prefixFns.Add(TokenType.STRING, parseStringLiteral)
         //prefixFns.Add(TokenType.LBRACKET, parseArrayLiteral)
         //prefixFns.Add(TokenType.LBRACE, parseHashLiteral)

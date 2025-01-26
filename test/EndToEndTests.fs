@@ -103,5 +103,50 @@ module EndToEndTests =
 
         Assert.Equal(result, 14)
 
+    [<Fact>]
+    let ``Can compile with toWasmFlat with simple let statement`` () =
+        let input = "let x = 10; x"
+
+        let bytes = EndToEnd.compileToWasmFlat input
+
+        let expectedBytes = 
+            [| 
+                Wasm.INSTR_i32_CONST; 
+                Wasm.i32 10;
+                Wasm.INSTR_LOCAL_SET;
+                Wasm.i32 0;
+                Wasm.INSTR_LOCAL_GET;
+                Wasm.i32 0;
+                Wasm.INSTR_END
+            |]
+
+        Assert.Equivalent(expectedBytes, bytes)
+
+    [<Fact>]
+    let ``Can compile with toWasmFlat parameterless function definition`` () =
+        let input = "func add() { 42; }"
+
+        let bytes = EndToEnd.compileToWasmFlatDebug input
+
+        let expectedBytes = 
+            [| 
+                Wasm.INSTR_i32_CONST; 
+                Wasm.i32 42;
+                Wasm.INSTR_END
+            |]
+
+        Assert.Equal(expectedBytes.Length, bytes.Length)
+        Assert.Equivalent(expectedBytes, bytes)
+
+    [<Fact>]
+    let ``Can compile with toWasmFlat simple function definition`` () =
+        let input = "func add(y) { let x = 10; x + y; }"
+
+        let bytes = EndToEnd.compileToWasmFlatDebug input
+
+        //let result = Helpers.runWithInt32Return bytes
+
+        Assert.True(bytes.Length > 1)
+
 
 

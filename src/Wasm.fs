@@ -222,7 +222,7 @@ module Wasm =
         | _ ->
             Empty
 
-    let rec private statementToWasmTree (state: Ast.Statement) (symbolMap: SymbolMapDict) : WasmTree =
+    and private statementToWasmTree (state: Ast.Statement) (symbolMap: SymbolMapDict) : WasmTree =
         match state.StateType() with
         | Ast.StatementType.LetStatement ->
             let letState = state :?> Ast.LetStatement
@@ -239,6 +239,26 @@ module Wasm =
             let exprTree = expressionToWasmTree exprState.expression symbolMap
             //let wasmBytes = [| INSTR_DROP |]
             let node = Node (None, Some [| exprTree |])
+            node
+        | Ast.StatementType.BlockStatement ->
+            let blockState = state :?> Ast.BlockStatement
+            let mutable innerTrees: WasmTree array = [| |]
+
+            for state in blockState.statements do
+                innerTrees <- Array.concat [ innerTrees; [| statementToWasmTree state symbolMap |] ]
+            let node = Node (None, Some innerTrees)
+            node
+        | Ast.StatementType.FunctionStatement ->
+            let fn = state :?> Ast.FunctionStatement
+
+            let fnName = fn.name.value
+            let parameterNames =
+                fn.parameters
+                |> Array.map (fun pm -> pm.value)
+
+            let wasmBytes = statementToWasmTree fn.body symbolMap
+            let inner = [| wasmBytes |]
+            let node = Node (None, Some inner)
             node
         | _ -> Empty
 
@@ -306,6 +326,16 @@ module Wasm =
                     symbolType = SymbolType.Local
                 }
             symbolMap.Add(name, symbolEntry)
+            ()
+        | Ast.StatementType.FunctionStatement ->
+            let func = statement :?> Ast.FunctionStatement
+            convertToSymbolMap symbolMap func.body
+            ()
+        | Ast.StatementType.BlockStatement ->
+            let block = statement :?> Ast.BlockStatement
+            for state in block.statements do
+                convertToSymbolMap symbolMap state
+            ()
         | _ -> ()
 
     let buildSymbolMap (codeModule : Ast.Module) =
@@ -314,6 +344,13 @@ module Wasm =
         convertToSymbolMap symbolMap codeModule
         symbolMap
 
+    let toWasmFlat (codeModule : Ast.Module) =
+        let symbolMap = buildSymbolMap codeModule
+
+        let functions = 
+            generateWasm codeModule symbolMap
+        functions
+        
 
     let toWasm (codeModule : Ast.Module) =
         let emptyBytes: byte [] = Array.zeroCreate 0

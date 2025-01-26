@@ -11,6 +11,21 @@ module EndToEnd =
         System.IO.File.WriteAllBytes("./atest.wasm", bytes)
         bytes
 
+    let compileToWasmFlat (input : string) =
+        let wasmBytes =
+            Lexer.createLexer input
+            |> Parser.createParser
+            |> Parser.parseModule
+            |> Wasm.toWasmFlat
+        wasmBytes
+
+    let compileToWasmFlatDebug (input : string) =
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+        let wasmBytes = Wasm.toWasmFlat modd
+        wasmBytes
+
     let compile (input: string) =
         let wasmBytes = 
             Lexer.createLexer input
