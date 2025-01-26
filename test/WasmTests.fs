@@ -393,15 +393,15 @@ module WasmTests =
     
     [<Fact>]
     let ``Can test build module`` () =
-        let wasmBytes = Wasm.buildModule()        
+
+        let wasmBytes = Wasm.buildFunctionModule()        
                 
-        let result = runWithInt32Return wasmBytes
-
-        Assert.Equal(42, result)
-
-       
         printWasm wasmBytes
+        
+        let mainResult = runFuncWithInt32Return "main" wasmBytes
+        let backupResult = runFuncWithInt32Return "backup" wasmBytes
 
-        Assert.True(true)
+        Assert.Equal(43, mainResult)
+        Assert.Equal(43, backupResult)
 
 

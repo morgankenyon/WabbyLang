@@ -3,6 +3,7 @@
 module ParserTests =
     open Xunit
     open Waux.Lang
+    let af (msg: string) = Assert.Fail msg
     let asInteger (e : Ast.Expression) =
         match e with
         | :? Ast.IntegerLiteral as integer -> 
@@ -26,12 +27,18 @@ module ParserTests =
     let asIdentifierFromStatement (s: Ast.Statement) =
         let asExprState = asExpressionStatement s
         match asExprState with
+        | Ok es -> asIdentifier es.expression
+        | Error msg -> Error msg
+    let asFunction (s: Ast.Expression) =
+        match s with
+        | :? Ast.FunctionLiteral as fn ->
+            Ok fn
+        | _ -> Error "Not a function literal"
+    let asFunctionFromStatement (s: Ast.Statement) =
+        let asExprState = asExpressionStatement s
+        match asExprState with
         | Ok es ->
-            let iden = asIdentifier es.expression
-            match iden with
-            | Ok id ->
-                Ok id
-            | Error msg -> Error msg
+            asFunction es.expression
         | Error msg -> Error msg
     //let asExpressionStatement (s: Ast.Statement) =
     //    s :?> Ast.ExpressionStatement
@@ -44,15 +51,12 @@ module ParserTests =
         | :? Ast.InfixExpression as infix ->
             Ok infix
         | _ -> Error "Not an infix expression"
+    let asInfixFromExpressionStatement (es: Ast.ExpressionStatement) =
+        asInfix es.expression
     let asInfixFromStatement (s: Ast.Statement) =
         let asExprState = asExpressionStatement s
         match asExprState with
-        | Ok es ->
-            let infixExpr = asInfix es.expression
-            match infixExpr with
-            | Ok infix ->
-                Ok infix
-            | Error msg -> Error msg
+        | Ok es -> asInfixFromExpressionStatement es
         | Error msg -> Error msg
     let testResultInfix (infix) (infixFunc) =
         match infix with
@@ -69,6 +73,29 @@ module ParserTests =
             Assert.Equal(i.token.Literal, (sprintf "%d" value))
         | None ->
             Assert.False(true, $"{il.TokenLiteral()} is not an integer")
+    let testIdentifier (ie: Ast.Expression) (value) =
+        let iden = asIdentifier ie
+        
+        match iden with 
+        | Ok id ->
+            let valueEqual = value = id.value
+            Assert.True(valueEqual, "testing values")
+            Assert.Equal(value, ie.TokenLiteral())
+        | Error msg -> Assert.Fail msg
+
+    let testStrInfixExpression (ie : Ast.Expression) (left) (operator) (right) =
+        let infixResult = asInfix ie
+
+        match infixResult with
+        | Ok infixExpr ->
+
+            testIdentifier infixExpr.left left
+
+            Assert.Equal(operator, infixExpr.operator)
+
+            testIdentifier infixExpr.right right
+        | Error msg -> Assert.Fail msg
+
     let AssertNoParseErrors (p: Parser.ParserState) =
         //if errors, maybe print to err out
         //TODO - maybe include parser errors in the output
@@ -235,6 +262,24 @@ module ParserTests =
             testIntegerLiteral ls.value 3
         | Error msg -> Assert.Fail msg
 
+    [<Theory>]
+    //[<InlineData("-a * b;", "((-a) * b)")>]
+    //[<InlineData("!-a", "(!(-a))")>]
+    [<InlineData("a + b + c", "((a + b) + c)")>]
+    [<InlineData("a + b - c","((a + b) - c)")>]
+    [<InlineData("a * b * c","((a * b) * c)")>]
+    [<InlineData("a * b / c","((a * b) / c)")>]
+    [<InlineData("a + b / c","(a + (b / c))")>]
+    [<InlineData("a + b * c + d / e - f","(((a + (b * c)) + (d / e)) - f)")>]
+    let ``Can test operator precedence`` input expected =
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+
+        AssertNoParseErrors parser
+
+        Assert.Equal(expected, (modd :> Ast.Node).Str())
+
     [<Fact>]
     let ``Can parse simple let statement with identifier`` () =
         let input = "let x = 3; x"
@@ -283,5 +328,66 @@ module ParserTests =
             let infixTest = buildInfixExpressionTest 3 "+" 2
             testResultInfix infix2 infixTest
         | Error msg -> Assert.Fail msg
+
+    [<Fact>]
+    let ``Can parse function literal``() =
+        let input = "fn(x, y) { x + y; };"
+
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+
+        AssertNoParseErrors parser
+
+        Assert.Equal(1, modd.statements.Length)
+
+        let fnLit = asFunctionFromStatement modd.statements.[0]
+
+        match fnLit with
+        | Ok fn ->
+            Assert.Equal(2, fn.parameters.Length)
+            
+            testIdentifier fn.parameters.[0] "x"
+            testIdentifier fn.parameters.[1] "y"
+
+            let bodyStatement = fn.body.statements.[0]
+
+            let infixResult = asInfixFromStatement bodyStatement
+
+            match infixResult with
+            | Ok infix ->
+                testStrInfixExpression infix "x" "+" "y"
+            | Error msg -> Assert.Fail msg
+
+            
+        | Error msg -> Assert.Fail msg
+
+    [<Fact>]
+    let ``Can parse function assigned to let statement``() =
+        let input = "let add = fn(x, y) { x + y; };"
+
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+
+        AssertNoParseErrors parser
+
+        Assert.Equal(1, modd.statements.Length)
+
+        let letResult = asLetStatement modd.statements.[0]
+
+        match letResult with
+        | Ok letState ->
+            testIdentifier letState.name "add"
+
+            let funcResult = asFunction letState.value
+            
+            match funcResult with
+            | Ok fn ->
+                Assert.Equal(2, fn.parameters.Length)
+                
+            | Error msg -> af msg
+        | Error msg -> af msg
+        
 
 

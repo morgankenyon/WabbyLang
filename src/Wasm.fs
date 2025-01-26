@@ -49,6 +49,8 @@ module Wasm =
     [<Literal>]
     let INSTR_END = 11uy
     [<Literal>]
+    let INSTR_CALL = 16uy
+    [<Literal>]
     let INSTR_DROP = 26uy
 
     type WasmValueBytes =
@@ -61,7 +63,10 @@ module Wasm =
 
     type WasmFuncBytes =
         {
-            locals: byte array
+            name: string
+            paramTypes : byte array
+            resultType : byte
+            locals: byte array array
             body: byte array
         }
     type SymbolType =
@@ -111,7 +116,10 @@ module Wasm =
         Array.concat [ [|normalizedSize |]; elements]
 
     let vecFlatten (elements: byte array array) =
-        let normalizedSize = i32 elements.Length
+        let nonEmptyElements = 
+            elements
+            |> Array.filter (fun ele -> ele.Length > 0)
+        let normalizedSize = i32 nonEmptyElements.Length
         let flattenedElements = elements
                                 |> Array.collect id
         Array.concat [ [| normalizedSize |]; flattenedElements ]
@@ -371,40 +379,61 @@ module Wasm =
         let bytes = modd [| typesec; funcsec; exportsec; codesec |]
         bytes
 
-    let buildModule () =
+    let buildModule (functionDecls : WasmFuncBytes array) =
         let emptyBytes: byte [] = Array.zeroCreate 0
         //let symbolMap = buildSymbolMap codeModule
 
-        //creating code section
-        let mainFn = 
-            [| INSTR_i32_CONST; i32 42; INSTR_END |]
-            |> funcNested [| locals 1 i32_VAL_TYPE |]
-        let codesec = 
-            mainFn
-            |> code
-            |> fun c -> [| c |]
+        let codeSection = 
+            functionDecls
+            |> Array.map (fun f -> funcNested f.locals f.body)
+            |> Array.map (fun f -> code f)
             |> codesec
 
         //Creating type section
         //need to figure out programmatically
-        let typesec = 
-            functype(emptyBytes, [| i32_VAL_TYPE |])
-            |> fun ft -> [| ft |]
+        let typeSection = 
+            functionDecls
+            |> Array.map (fun f -> functype (f.paramTypes, [| f.resultType |]))
+            //functype(emptyBytes, [| i32_VAL_TYPE |])
+            //|> fun ft -> [| ft |]
             |> typesec
             
         //creating func section
-        let funcsec =
-            [| 0uy |]
-            |> fun fs -> [| fs |]
+        let funcSection =
+            functionDecls
+            |> Array.map (fun f -> [| 0uy |])
             |> funcsec
 
         //creating export section
-        let exportsec = 
-            exportdesc(0uy)
-            |> export "main"
-            |> fun ed -> [| ed |]
+        let exportSection =
+            functionDecls
+            |> Array.mapi (fun i f -> export f.name (exportdesc(i32(i))))
             |> exportsec
 
-        let bytes = modd [| typesec; funcsec; exportsec; codesec |]
+        let bytes = modd [| typeSection; funcSection; exportSection; codeSection |]
         bytes
+
+    let buildFunctionModule () =
+        let emptyBytes: byte [] = Array.zeroCreate 0
+        let mainLocalBytes = [| locals 1 i32_VAL_TYPE |]
+        let mainBodyBytes = [| INSTR_CALL; i32 1; INSTR_END |]
+        let constDecls : WasmFuncBytes array = [| 
+            {
+                name = "main"
+                paramTypes = emptyBytes
+                resultType = i32_VAL_TYPE
+                locals = mainLocalBytes
+                body = mainBodyBytes
+            };
+            {
+                name = "backup"
+                //It actually failed when attempting to add an number in the main bodyBytes above
+                paramTypes = emptyBytes //this failed when having a param I didn't use
+                resultType = i32_VAL_TYPE
+                locals = [| emptyBytes |]
+                body = [| INSTR_i32_CONST; i32 43; INSTR_END|]
+            }
+        |]
+
+        buildModule constDecls
         

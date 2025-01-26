@@ -6,10 +6,12 @@ module Ast =
     | Module
     | ExpressionStatement
     | LetStatement
+    | BlockStatement
     type ExpressionType =
     | InfixExpression
     | IntegerLiteral
     | Identifier
+    | FunctionLiteral
 
     
     type AstType =
@@ -99,6 +101,35 @@ module Ast =
                 let rightStr = this.right.Str()
 
                 sprintf "(%s %s %s)"  leftStr this.operator rightStr
+    
+    type BlockStatement(token: TokenPair, statements: Statement[]) =
+        member this.token = token
+        member this.statements = statements
+        interface Statement with
+            member this.NodeType = NodeType.Statement
+            member this.StateType () = StatementType.BlockStatement
+            member this.TokenLiteral () = this.token.Literal             
+            member this.Str () =
+                this.statements
+                    |> Array.map (fun s -> s.Str())
+                    |> Array.reduce (fun a b -> a + b)
+
+    type FunctionLiteral(token: TokenPair, parameters: Identifier[], body: BlockStatement) =
+        member this.token = token
+        member this.parameters = parameters
+        member this.body = body
+        interface Expression with
+            member this.NodeType = NodeType.Expression
+            member this.ExprType () = ExpressionType.FunctionLiteral
+            member this.TokenLiteral () = this.token.Literal
+            member this.Str () = 
+                let paraStr = 
+                    this.parameters
+                        |> Array.map (fun s -> (s :> Expression).Str())
+                        |> Array.reduce (fun a b -> sprintf "%s, %s" a b)
+                
+                let bodyStr = (this.body :> Statement).Str()
+                sprintf "%s (%s) %s" this.token.Literal paraStr bodyStr
 
     type IntegerLiteral(token: TokenPair, value: int32) =
         member this.token = token

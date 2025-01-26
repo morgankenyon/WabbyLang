@@ -7,9 +7,9 @@
         | Illegal
 
     let lookupIdent ident =
-        //if ident = "fn" then
-        //    FUNCTION
-        if ident = "let" then
+        if ident = "fn" then
+            FUNC
+        else if ident = "let" then
             LET
         //else if ident = "if" then
         //    IF
@@ -98,6 +98,9 @@
             | ')' -> (Token.RPAREN, l.ch.ToString())
             | '=' -> (Token.ASSIGN, l.ch.ToString())
             | ';' -> (Token.SEMICOLON, l.ch.ToString())
+            | '{' -> (Token.LBRACE, l.ch.ToString())
+            | '}' -> (Token.RBRACE, l.ch.ToString())
+            | ',' -> (Token.COMMA, l.ch.ToString())
             | _ -> nextComplexToken l
 
         let token = { Token = tokenType; Literal = literal }

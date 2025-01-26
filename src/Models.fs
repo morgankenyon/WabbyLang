@@ -14,11 +14,15 @@
         | SLASH
         //delimeters
         //| PERIOD
+        | COMMA
         | NEW_LINE
         | SEMICOLON
         | LPAREN
         | RPAREN
+        | LBRACE
+        | RBRACE
         //keywords
+        | FUNC
         | LET
 
     type TokenPair =

@@ -184,6 +184,67 @@ module Parser =
         //| TokenType.RETURN -> parseReturnStatement p
         | _ -> parseExpressionStatement p
 
+    let parseFunctionParameters p =
+        let identifiers = new ResizeArray<Ast.Identifier>()
+
+        if peekTokenIs p Token.RPAREN then
+            nextToken p
+            identifiers.ToArray()
+        else
+            nextToken p
+
+            let ident = new Ast.Identifier(p.curToken, p.curToken.Literal)
+            identifiers.Add(ident)
+
+            while peekTokenIs p Token.COMMA do
+                nextToken p
+                nextToken p
+                let iden = new Ast.Identifier(p.curToken, p.curToken.Literal)
+                identifiers.Add(iden)
+            
+            if not (expectPeek p Token.RPAREN) then
+                Array.empty<Ast.Identifier>
+            else identifiers.ToArray()
+    let parseBlockStatement p =
+        
+        let curToken = p.curToken
+
+        let statements = new ResizeArray<Ast.Statement>()
+
+        nextToken p
+
+        while not (curTokenIs p Token.RBRACE) && not (curTokenIs p Token.EOF) do
+            match parseStatement p with
+            | Some statement -> statements.Add(statement)
+            | None -> ()
+
+            nextToken p
+        
+        let statementArray = statements.ToArray()
+
+        let block = new Ast.BlockStatement(curToken, statementArray)
+
+        block
+
+    let parseFunctionLiteral p =
+        let curToken = p.curToken
+
+        if not (expectPeek p Token.LPAREN) then
+            None
+        else
+
+            let parameters = parseFunctionParameters p
+
+            if not (expectPeek p Token.LBRACE) then
+                None
+            else
+                let body = parseBlockStatement p
+
+                new Ast.FunctionLiteral(curToken, parameters, body)
+                |> toSomeExpr
+
+
+
     let createParser lexer =
         let firstToken = Lexer.nextToken lexer
         let secondToken = Lexer.nextToken lexer
@@ -198,7 +259,7 @@ module Parser =
         //prefixFns.Add(TokenType.FALSE, parseBoolean)
         prefixFns.Add(Token.LPAREN, parseGroupedExpression)
         //prefixFns.Add(TokenType.IF, parseIfExpression)
-        //prefixFns.Add(TokenType.FUNCTION, parseFunctionLiteral)
+        prefixFns.Add(Token.FUNC, parseFunctionLiteral)
         //prefixFns.Add(TokenType.STRING, parseStringLiteral)
         //prefixFns.Add(TokenType.LBRACKET, parseArrayLiteral)
         //prefixFns.Add(TokenType.LBRACE, parseHashLiteral)

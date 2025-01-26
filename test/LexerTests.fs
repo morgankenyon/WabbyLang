@@ -149,3 +149,32 @@ module LexerTests =
         let input = "let x = 3; x"
         let lexer = Lexer.createLexer input
         expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
+
+    [<Fact>]
+    let ``Can Lex simple function declarations``() =
+        let expectedTokensRaw: (Token * string) list =
+            [
+                (Token.LET, "let");
+                (Token.IDENT, "add");
+                (Token.ASSIGN, "=");
+                (Token.FUNC, "fn");
+                (Token.LPAREN, "(");
+                (Token.IDENT, "x");
+                (Token.COMMA, ",");
+                (Token.IDENT, "y");
+                (Token.RPAREN, ")");
+                (Token.LBRACE, "{");
+                (Token.IDENT, "x");
+                (Token.PLUS, "+");
+                (Token.IDENT, "y");                
+                (Token.SEMICOLON, ";");
+                (Token.RBRACE, "}");
+                (Token.SEMICOLON, ";");
+                (Token.EOF, "");
+            ]
+        let expectedTokens = buildTokenTypes expectedTokensRaw
+
+        let input = "let add = fn(x, y) { x + y; };"
+        let lexer = Lexer.createLexer input
+        expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
+            

@@ -32,10 +32,21 @@ module ConvertingTests =
                 11|]
         let bytes = numbers |> Array.map (fun num -> (byte) num)
         Assert.NotNull bytes
-        Helpers.printWasm bytes
+        //Helpers.printWasm bytes
         //let engine = new Engine()
 
         //let modd = Module.FromBytes(engine, "testLang", bytes)
         
         //let watText = modd.ToString();
         //Assert.NotEmpty(watText)
+    [<Fact>]
+    let ``Can convert multi function example to wasm program``() =
+        let numbers = [|     0; 97; 115; 109;  1;  0; 0;  0;  
+            1;   5;   1;  96;  0;  1; 127;   
+            3;  3;  2; 0;  0;  
+            7;  17;   2;   4; 109; 97; 105; 110;  0;  0; 6; 98; 97;  99; 107; 117; 112;  0;   1;  
+            10; 13;  2; 6;  1;  1; 127;  65;  42; 11;  4;   0;  65; 43; 11 |]
+
+        let bytes = numbers |> Array.map (fun num -> (byte) num)
+        Assert.NotNull bytes
+        Helpers.printWasm bytes
