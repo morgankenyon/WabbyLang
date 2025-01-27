@@ -12,6 +12,7 @@ module Ast =
     | InfixExpression
     | IntegerLiteral
     | Identifier
+    | CallExpression
 
     
     type AstType =
@@ -87,6 +88,23 @@ module Ast =
             member this.TokenLiteral () = token.Literal
             member this.Str () = this.expression.Str()
 
+    type CallExpression(token: TokenPair, func: Expression, arguments: Expression[]) =
+        member this.token = token
+        member this.func = func
+        member this.arguments = arguments
+        interface Expression with
+            member this.NodeType = NodeType.Expression
+            member this.ExprType () = ExpressionType.CallExpression
+            member this.TokenLiteral () = this.token.Literal
+            member this.Str () = 
+                let argStr =
+                    this.arguments
+                        |> Array.map (fun s -> s.Str())
+                        |> Array.reduce (fun a b -> sprintf "%s, %s" a b)
+                
+                let funcStr = this.func.Str()
+
+                sprintf "%s(%s)" funcStr argStr
     type InfixExpression(token: TokenPair, left: Expression, operator: string, right: Expression) =
         member this.token = token
         member this.left = left

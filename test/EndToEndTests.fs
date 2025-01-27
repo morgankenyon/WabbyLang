@@ -140,13 +140,36 @@ module EndToEndTests =
 
     [<Fact>]
     let ``Can compile with toWasmFlat simple function definition`` () =
-        let input = "func add(y) { let x = 10; x + y; }"
+        let input = "func add() { let x = 0; x }"
 
         let bytes = EndToEnd.compileToWasmFlatDebug input
 
-        //let result = Helpers.runWithInt32Return bytes
+        let expectedBytes = 
+            [| 
+                Wasm.INSTR_i32_CONST;
+                Wasm.i32 0;
+                Wasm.INSTR_LOCAL_SET;
+                Wasm.i32 0;
+                Wasm.INSTR_LOCAL_GET;
+                Wasm.i32 0;
+                Wasm.INSTR_END
+            |]
 
-        Assert.True(bytes.Length > 1)
+        Assert.Equal(expectedBytes.Length, bytes.Length)
+        Assert.Equivalent(expectedBytes, bytes)
 
+    [<Fact>]
+    let ``Can build SymbolMap with nested function definition`` () =
+        let input = "func doIt() { add(1,2); } func add(x, y) { x + y; }"
 
+        let symbolScope = EndToEnd.compileToBuildSymbolMap2 input
+        
+        Assert.Equal(1, symbolScope.Count)
 
+        let symbolEntry = symbolScope.First.Value
+
+        match symbolEntry with
+        | Wasm.Nested nested ->
+            Assert.Equal(2, nested.Count)
+        | Wasm.Locals _ ->
+            raise (new System.Exception("Should be nested"))

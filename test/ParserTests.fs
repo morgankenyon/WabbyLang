@@ -405,6 +405,36 @@ module ParserTests =
             
         | Error msg -> Assert.Fail msg
 
+    [<Fact>]
+    let ``Can parse function call inside function``() =
+        let input = "func doIt() { add(1,2); } func add(x, y) { x + y; }"
+
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+
+        AssertNoParseErrors parser
+
+        Assert.Equal(1, modd.statements.Length)
+
+        //let fnLit = asFunction modd.statements.[0]
+
+        //match fnLit with
+        //| Ok fn ->
+        //    Assert.Equal(0, fn.parameters.Length)
+
+        //    let bodyStatement = fn.body.statements.[0]
+
+        //    let infixResult = asInfixFromStatement bodyStatement
+
+        //    match infixResult with
+        //    | Ok infix ->
+        //        testIntInfixExpression infix 3 "+" 2
+        //    | Error msg -> Assert.Fail msg
+
+            
+        //| Error msg -> Assert.Fail msg
+
     //[<Fact>]
     //let ``Can parse function assigned to let statement``() =
     //    let input = "fn(x, y) { x + y; };"

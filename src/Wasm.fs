@@ -2,6 +2,7 @@
 
 module Wasm =
     open System
+    open System.Collections.Generic
 
     [<Literal>]
     let SECTION_ID_TYPE = 1uy
@@ -71,13 +72,24 @@ module Wasm =
         }
     type SymbolType =
     | Local
+    | Param
     type SymbolEntry =
         {
             name: string
             index: int
             symbolType: SymbolType 
         }
-    type SymbolMapDict = System.Collections.Generic.Dictionary<string, SymbolEntry>
+    type SymbolDict = System.Collections.Generic.Dictionary<string, SymbolEntry>
+    type SymbolEntries =
+    | Nested of Dictionary<string, SymbolDict>
+    | Locals of SymbolDict
+        //{
+        //    funcs: Dictionary<string, Dictionary<
+        //}
+    //| Entry of nested: System.Collections.Generic.Dictionary<string, 
+    //type SymbolMapNestedDict = System.Collections.Generic.Dictionary<string, SymbolMapDict>
+    //type SymbolMapDict = System.Collections.Generic.Dictionary<string, SymbolEntry>
+    type SymbolScope = System.Collections.Generic.LinkedList<SymbolEntries>
 
     let stringToBytes (s: string) =
         System.Text.Encoding.UTF8.GetBytes(s)
@@ -183,7 +195,7 @@ module Wasm =
         | "/" -> INSTR_i32_DIV_S
         | _ -> INSTR_END
 
-    let resolveSymbols (symbolMap: SymbolMapDict) (name: string) =
+    let resolveSymbols (symbolMap: SymbolDict) (name: string) =
         let containsKey = symbolMap.ContainsKey name
         match containsKey with
         | true ->            
@@ -192,7 +204,7 @@ module Wasm =
         | false ->
             Error $"Error: undeclared identifier: {name}"
 
-    let rec private expressionToWasmTree (expr : Ast.Expression) (symbolMap: SymbolMapDict): WasmTree =
+    let rec private expressionToWasmTree (expr : Ast.Expression) (symbolMap: SymbolDict): WasmTree =
         match expr.ExprType() with
         | Ast.ExpressionType.IntegerLiteral ->
             let integerLiteral = expr :?> Ast.IntegerLiteral
@@ -222,7 +234,7 @@ module Wasm =
         | _ ->
             Empty
 
-    and private statementToWasmTree (state: Ast.Statement) (symbolMap: SymbolMapDict) : WasmTree =
+    and private statementToWasmTree (state: Ast.Statement) (symbolMap: SymbolDict) : WasmTree =
         match state.StateType() with
         | Ast.StatementType.LetStatement ->
             let letState = state :?> Ast.LetStatement
@@ -299,7 +311,7 @@ module Wasm =
         | _ -> [| |]
 
 
-    let generateWasm (codeModule : Ast.Module) (symbolMap : SymbolMapDict) : byte array =
+    let generateWasm (codeModule : Ast.Module) (symbolMap : SymbolDict) : byte array =
         let mutable bytes : byte array = [| |]
         for statement in codeModule.statements do
             let wasmTree = statementToWasmTree statement symbolMap
@@ -309,7 +321,7 @@ module Wasm =
         let bodyBytes = Array.concat [ bytes; [| INSTR_END |]]
         bodyBytes
      
-    let rec private convertToSymbolMap (symbolMap: SymbolMapDict) (statement: Ast.Statement) =
+    let rec private convertToSymbolMap (symbolMap: SymbolDict) (statement: Ast.Statement) =
         match statement.StateType() with
         | Ast.StatementType.Module ->
             let modd = statement :?> Ast.Module
@@ -339,18 +351,85 @@ module Wasm =
         | _ -> ()
 
     let buildSymbolMap (codeModule : Ast.Module) =
-        let symbolMap = new SymbolMapDict();
+        let symbolMap = new SymbolDict();
 
         convertToSymbolMap symbolMap codeModule
         symbolMap
 
-    let toWasmFlat (codeModule : Ast.Module) =
-        let symbolMap = buildSymbolMap codeModule
+    let rec buildSymbolTable (statement: Ast.Statement) (scopes : SymbolScope) =
+        match statement.StateType() with
+        | Ast.StatementType.Module ->
+            let modd = statement :?> Ast.Module
+            for state in modd.statements do
+                buildSymbolTable state scopes 
+            ()
+        | Ast.StatementType.FunctionStatement ->
+            let funcState = statement :?> Ast.FunctionStatement
+            let name = funcState.name.value
+            let locals = new SymbolDict()
+            let last = scopes.Last.Value
+            match last with
+            | Nested inner ->
+                inner.Add(name, locals)
+            | Locals locals ->
+                raise (new Exception("Should have been a nested entry here instead of locals"))
 
-        let functions = 
-            generateWasm codeModule symbolMap
-        functions
-        
+            
+            scopes.AddLast (Locals locals) |> ignore
+            for param in funcState.parameters do
+                let paramName = param.value
+                let symbolEntry = 
+                    { 
+                        name = name
+                        index = locals.Count
+                        symbolType = SymbolType.Param
+                    }
+                locals.Add(paramName, symbolEntry)
+            buildSymbolTable funcState.body scopes
+            scopes.RemoveLast()
+            ()
+        | Ast.StatementType.LetStatement ->
+            let letState = statement :?> Ast.LetStatement
+            let name = letState.name.value
+            let idx = 
+                match scopes.Last.Value with
+                | Nested inner -> inner.Count
+                | Locals locals -> locals.Count
+            let symbolEntry =
+                {
+                    name = name
+                    index = idx
+                    symbolType = SymbolType.Local
+                }
+            match scopes.Last.Value with
+            | Nested inner ->
+                raise (new Exception("Should have been a local entry here instead of nested"))
+            | Locals locals ->
+                locals.Add(name, symbolEntry)
+        | Ast.StatementType.BlockStatement ->
+            let block = statement :?> Ast.BlockStatement
+            for state in block.statements do
+                buildSymbolTable state scopes 
+            ()
+            
+        | _ -> ()
+
+    let buildSymbolMap2 (codeModule: Ast.Module) =
+        let scopes = new SymbolScope();
+        let nested = Nested (Dictionary<string, Dictionary<string, SymbolEntry>>())
+        scopes.AddLast nested |> ignore
+        buildSymbolTable codeModule scopes
+        scopes
+
+
+
+    let toWasmFlat (codeModule : Ast.Module) =
+        let symbolMap = buildSymbolMap2 codeModule
+
+        //let functions = 
+        //    generateWasm codeModule symbolMap
+        //functions
+        [| 10uy |]
 
     let toWasm (codeModule : Ast.Module) =
         let emptyBytes: byte [] = Array.zeroCreate 0

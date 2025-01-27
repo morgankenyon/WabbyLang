@@ -252,6 +252,48 @@ module Parser =
 
         block
 
+    let parseExpressionList p endToken =
+        let exprList = new ResizeArray<Ast.Expression>()
+
+        if peekTokenIs p endToken then
+            nextToken p
+            Some (exprList.ToArray())
+        else
+            nextToken p
+
+            let expr = parseExpression p ExprPrecedence.LOWEST
+
+            if expr.IsSome then
+                exprList.Add(expr.Value)
+                ()
+            else
+                ()
+
+            while peekTokenIs p Token.COMMA do
+                nextToken p
+                nextToken p
+
+
+                let nextExpr = parseExpression p ExprPrecedence.LOWEST
+                if nextExpr.IsSome then
+                    exprList.Add(nextExpr.Value)
+                    ()
+                else
+                    ()
+            
+            if not (expectPeek p endToken) then
+                None
+            else 
+                Some (exprList.ToArray())
+    let parseCallExpression p (func: Ast.Expression) =
+        let curToken = p.curToken
+        
+        match parseExpressionList p Token.RPAREN with
+        |  Some arguments ->
+            new Ast.CallExpression(curToken, func, arguments)
+            |> toSomeExpr
+        | None -> None
+
     //let parseFunctionParameters p =
     //    let identifiers = new ResizeArray<Ast.Identifier>()
 
@@ -323,7 +365,7 @@ module Parser =
         //infixFns.Add(TokenType.NOT_EQ, parseInfixExpression)
         //infixFns.Add(TokenType.LT, parseInfixExpression)
         //infixFns.Add(TokenType.GT, parseInfixExpression)
-        //infixFns.Add(TokenType.LPAREN, parseCallExpression)
+        infixFns.Add(Token.LPAREN, parseCallExpression)
         //infixFns.Add(TokenType.LBRACKET, parseIndexExpression)
 
         let parser = 

@@ -26,6 +26,13 @@ module EndToEnd =
         let wasmBytes = Wasm.toWasmFlat modd
         wasmBytes
 
+    let compileToBuildSymbolMap2 (input : string) =
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+        let scopes = Wasm.buildSymbolMap2 modd
+        scopes
+
     let compile (input: string) =
         let wasmBytes = 
             Lexer.createLexer input
