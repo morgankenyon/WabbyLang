@@ -80,15 +80,11 @@ module Wasm =
             symbolType: SymbolType 
         }
     type SymbolDict = System.Collections.Generic.Dictionary<string, SymbolEntry>
+    type NestedSymbolDict = Dictionary<string, SymbolDict>
     type SymbolEntries =
-    | Nested of Dictionary<string, SymbolDict>
+    | Nested of NestedSymbolDict
     | Locals of SymbolDict
-        //{
-        //    funcs: Dictionary<string, Dictionary<
-        //}
-    //| Entry of nested: System.Collections.Generic.Dictionary<string, 
-    //type SymbolMapNestedDict = System.Collections.Generic.Dictionary<string, SymbolMapDict>
-    //type SymbolMapDict = System.Collections.Generic.Dictionary<string, SymbolEntry>
+
     type SymbolScope = System.Collections.Generic.LinkedList<SymbolEntries>
 
     let stringToBytes (s: string) =
@@ -321,40 +317,40 @@ module Wasm =
         let bodyBytes = Array.concat [ bytes; [| INSTR_END |]]
         bodyBytes
      
-    let rec private convertToSymbolMap (symbolMap: SymbolDict) (statement: Ast.Statement) =
-        match statement.StateType() with
-        | Ast.StatementType.Module ->
-            let modd = statement :?> Ast.Module
-            for state in modd.statements do
-                convertToSymbolMap symbolMap state
-            ()
-        | Ast.StatementType.LetStatement ->
-            let letState = statement :?> Ast.LetStatement
-            let name = letState.name.value
-            let symbolEntry = 
-                {
-                    name = name
-                    index = symbolMap.Count
-                    symbolType = SymbolType.Local
-                }
-            symbolMap.Add(name, symbolEntry)
-            ()
-        | Ast.StatementType.FunctionStatement ->
-            let func = statement :?> Ast.FunctionStatement
-            convertToSymbolMap symbolMap func.body
-            ()
-        | Ast.StatementType.BlockStatement ->
-            let block = statement :?> Ast.BlockStatement
-            for state in block.statements do
-                convertToSymbolMap symbolMap state
-            ()
-        | _ -> ()
+    //let rec private convertToSymbolMap (symbolMap: SymbolDict) (statement: Ast.Statement) =
+    //    match statement.StateType() with
+    //    | Ast.StatementType.Module ->
+    //        let modd = statement :?> Ast.Module
+    //        for state in modd.statements do
+    //            convertToSymbolMap symbolMap state
+    //        ()
+    //    | Ast.StatementType.LetStatement ->
+    //        let letState = statement :?> Ast.LetStatement
+    //        let name = letState.name.value
+    //        let symbolEntry = 
+    //            {
+    //                name = name
+    //                index = symbolMap.Count
+    //                symbolType = SymbolType.Local
+    //            }
+    //        symbolMap.Add(name, symbolEntry)
+    //        ()
+    //    | Ast.StatementType.FunctionStatement ->
+    //        let func = statement :?> Ast.FunctionStatement
+    //        convertToSymbolMap symbolMap func.body
+    //        ()
+    //    | Ast.StatementType.BlockStatement ->
+    //        let block = statement :?> Ast.BlockStatement
+    //        for state in block.statements do
+    //            convertToSymbolMap symbolMap state
+    //        ()
+    //    | _ -> ()
 
-    let buildSymbolMap (codeModule : Ast.Module) =
-        let symbolMap = new SymbolDict();
+    //let buildSymbolMap (codeModule : Ast.Module) =
+    //    let symbolMap = new SymbolDict();
 
-        convertToSymbolMap symbolMap codeModule
-        symbolMap
+    //    convertToSymbolMap symbolMap codeModule
+    //    symbolMap
 
     let rec buildSymbolTable (statement: Ast.Statement) (scopes : SymbolScope) =
         match statement.StateType() with
@@ -416,88 +412,126 @@ module Wasm =
 
     let buildSymbolMap2 (codeModule: Ast.Module) =
         let scopes = new SymbolScope();
-        let nested = Nested (Dictionary<string, Dictionary<string, SymbolEntry>>())
+        let nested = Nested (NestedSymbolDict())
         scopes.AddLast nested |> ignore
         buildSymbolTable codeModule scopes
         scopes
 
+    //let toWasm (codeModule : Ast.Module) =
+    //    let emptyBytes: byte [] = Array.zeroCreate 0
+    //    let symbolMap = buildSymbolMap codeModule
 
-
-    let toWasmFlat (codeModule : Ast.Module) =
-        let symbolMap = buildSymbolMap2 codeModule
-
-        //let functions = 
-        //    generateWasm codeModule symbolMap
-        //functions
-        [| 10uy |]
-
-    let toWasm (codeModule : Ast.Module) =
-        let emptyBytes: byte [] = Array.zeroCreate 0
-        let symbolMap = buildSymbolMap codeModule
-
-        //Creating type section
-        //need to figure out programmatically
-        let funcType = functype(emptyBytes, [| i32_VAL_TYPE |])
-        let typesec = typesec([| funcType |])
+    //    //Creating type section
+    //    //need to figure out programmatically
+    //    let funcType = functype(emptyBytes, [| i32_VAL_TYPE |])
+    //    let typesec = typesec([| funcType |])
             
-        //creating func section
-        let funcsec = funcsec([| [|0uy|] |])
+    //    //creating func section
+    //    let funcsec = funcsec([| [|0uy|] |])
 
-        //creating export section
-        let exportDesc = exportdesc(0uy)
-        let export = export "main" exportDesc
-        let exportsec = exportsec [| export |]
+    //    //creating export section
+    //    let exportDesc = exportdesc(0uy)
+    //    let export = export "main" exportDesc
+    //    let exportsec = exportsec [| export |]
 
-        //creating code section
-        let localBytes = locals symbolMap.Count i32_VAL_TYPE
-        let functions = 
-            generateWasm codeModule symbolMap
-            |> funcNested [| localBytes |]
+    //    //creating code section
+    //    let localBytes = locals symbolMap.Count i32_VAL_TYPE
+    //    let functions = 
+    //        generateWasm codeModule symbolMap
+    //        |> funcNested [| localBytes |]
 
-        let code = code functions
-        let codesec = codesec [| code |]
+    //    let code = code functions
+    //    let codesec = codesec [| code |]
 
-        let bytes = modd [| typesec; funcsec; exportsec; codesec |]
-        bytes
+    //    let bytes = modd [| typesec; funcsec; exportsec; codesec |]
+    //    bytes
 
-    let buildModuleClean (codeModule: Ast.Module) =
-        let emptyBytes: byte [] = Array.zeroCreate 0
-        let symbolMap = buildSymbolMap codeModule
+    //let buildModuleClean (codeModule: Ast.Module) =
+    //    let emptyBytes: byte [] = Array.zeroCreate 0
+    //    let symbolMap = buildSymbolMap codeModule
 
-        //Creating type section
-        //need to figure out programmatically
-        let typesec = 
-            functype(emptyBytes, [| i32_VAL_TYPE |])
-            |> fun ft -> [| ft |]
-            |> typesec
+    //    //Creating type section
+    //    //need to figure out programmatically
+    //    let typesec = 
+    //        functype(emptyBytes, [| i32_VAL_TYPE |])
+    //        |> fun ft -> [| ft |]
+    //        |> typesec
             
-        //creating func section
-        let funcsec =
-            [| 0uy |]
-            |> fun fs -> [| fs |]
-            |> funcsec
+    //    //creating func section
+    //    let funcsec =
+    //        [| 0uy |]
+    //        |> fun fs -> [| fs |]
+    //        |> funcsec
 
-        //creating export section
-        let exportsec = 
-            exportdesc(0uy)
-            |> export "main"
-            |> fun ed -> [| ed |]
-            |> exportsec
+    //    //creating export section
+    //    let exportsec = 
+    //        exportdesc(0uy)
+    //        |> export "main"
+    //        |> fun ed -> [| ed |]
+    //        |> exportsec
 
-        //creating code section
-        let codesec = 
-            generateWasm codeModule symbolMap
-            |> funcNested [| locals symbolMap.Count i32_VAL_TYPE |]
-            |> code
-            |> fun c -> [| c |]
-            |> codesec
+    //    //creating code section
+    //    let codesec = 
+    //        generateWasm codeModule symbolMap
+    //        |> funcNested [| locals symbolMap.Count i32_VAL_TYPE |]
+    //        |> code
+    //        |> fun c -> [| c |]
+    //        |> codesec
 
-        let bytes = modd [| typesec; funcsec; exportsec; codesec |]
-        bytes
+    //    let bytes = modd [| typesec; funcsec; exportsec; codesec |]
+    //    bytes
+
+    let rec defineFunctionDecls (statement: Ast.Statement) (symbols: NestedSymbolDict) : WasmFuncBytes array =
+        match statement.StateType() with
+        | Ast.StatementType.BlockStatement ->
+            let block = statement :?> Ast.BlockStatement
+            let mutable funcBytes : WasmFuncBytes array = [| |]
+            for state in block.statements do
+                let stateBytes = defineFunctionDecls state symbols
+                funcBytes <- Array.concat [ funcBytes; stateBytes ]
+            funcBytes
+                     
+        | Ast.StatementType.FunctionStatement ->
+            let funcState = statement :?> Ast.FunctionStatement
+            let name = funcState.name.value
+
+            let (funcSymbols, localVars) = 
+                if symbols.ContainsKey name 
+                then
+                    let symbols = symbols[name]
+                    let mutable symbolEntries : SymbolEntry array = [| |]
+                    for sym in symbols.Values do
+                        symbolEntries <- Array.concat [ symbolEntries; [| sym |] ]
+                    (symbols, symbolEntries)
+                else (new SymbolDict(), [| |])
+            let paramVals = 
+                localVars
+                |> Array.filter (fun se -> se.symbolType = SymbolType.Param)
+            let paramTypes =
+                paramVals
+                |> Array.map (fun _ -> i32_VAL_TYPE)
+            let varsCount = 
+                localVars
+                |> Array.filter (fun se -> se.symbolType = SymbolType.Local)
+                |> Array.length
+            let bodyWasm = 
+                statementToWasmTree funcState funcSymbols
+                |> wasmTreeToBytes
+            let functionDecls : WasmFuncBytes array = [| 
+                {
+                    name = name
+                    paramTypes = paramTypes
+                    resultType = i32_VAL_TYPE
+                    locals = [| locals varsCount i32_VAL_TYPE |]
+                    body = Array.concat [ bodyWasm; [| INSTR_END |]]
+                }
+            |]
+            functionDecls
+        | _ -> [| |]
 
     let buildModule (functionDecls : WasmFuncBytes array) =
         let emptyBytes: byte [] = Array.zeroCreate 0
-        //let symbolMap = buildSymbolMap codeModule
+        //let symbolMap = buildSymbolMap2 codeModule
 
         let codeSection = 
             functionDecls
@@ -529,27 +563,38 @@ module Wasm =
         let bytes = modd [| typeSection; funcSection; exportSection; codeSection |]
         bytes
 
-    let buildFunctionModule () =
-        let emptyBytes: byte [] = Array.zeroCreate 0
-        let mainLocalBytes = [| locals 1 i32_VAL_TYPE |]
-        let mainBodyBytes = [| INSTR_CALL; i32 1; INSTR_END |]
-        let constDecls : WasmFuncBytes array = [| 
-            {
-                name = "main"
-                paramTypes = emptyBytes
-                resultType = i32_VAL_TYPE
-                locals = mainLocalBytes
-                body = mainBodyBytes
-            };
-            {
-                name = "backup"
-                //It actually failed when attempting to add an number in the main bodyBytes above
-                paramTypes = emptyBytes //this failed when having a param I didn't use
-                resultType = i32_VAL_TYPE
-                locals = [| emptyBytes |]
-                body = [| INSTR_i32_CONST; i32 43; INSTR_END|]
-            }
-        |]
+    //let buildFunctionModule () =
+    //    let emptyBytes: byte [] = Array.zeroCreate 0
+    //    let mainLocalBytes = [| locals 1 i32_VAL_TYPE |]
+    //    let mainBodyBytes = [| INSTR_CALL; i32 1; INSTR_END |]
+    //    let constDecls : WasmFuncBytes array = [| 
+    //        {
+    //            name = "main"
+    //            paramTypes = emptyBytes
+    //            resultType = i32_VAL_TYPE
+    //            locals = mainLocalBytes
+    //            body = mainBodyBytes
+    //        };
+    //        {
+    //            name = "backup"
+    //            //It actually failed when attempting to add an number in the main bodyBytes above
+    //            paramTypes = emptyBytes //this failed when having a param I didn't use
+    //            resultType = i32_VAL_TYPE
+    //            locals = [| emptyBytes |]
+    //            body = [| INSTR_i32_CONST; i32 43; INSTR_END|]
+    //        }
+    //    |]
 
-        buildModule constDecls
-        
+    //    buildModule constDecls
+      
+    let compile (codeModule : Ast.Module) =
+        let symbolScope = buildSymbolMap2 codeModule
+        let symbols = 
+            match symbolScope.First.Value with
+            | Nested nested -> nested
+            | Locals _ -> raise (new Exception("Should not be locals"))
+        let mutable functionDecls : WasmFuncBytes array = [||]
+        for statement in codeModule.statements do
+            let funcDecls = defineFunctionDecls statement symbols
+            functionDecls <- Array.concat [ functionDecls; funcDecls ]
+        buildModule functionDecls

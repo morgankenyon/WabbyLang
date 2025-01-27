@@ -5,158 +5,27 @@ module EndToEndTests =
     open Waux.Lang
     open Wasmtime
 
-    [<Fact>]
-    let ``Can compile empty number`` () =
-        let input = "5"
-
-        EndToEnd.compileInstantiateAndPrint input false
-
-    [<Fact>]
-    let ``Can compile addition operation`` () =
-        let input = "5 + 2"
-
-        EndToEnd.compileInstantiateAndPrint input false
-
-    [<Fact>]
-    let ``Can compile subtraction operation`` () =
-        let input = "10 - 2"
-
-        let result = 
-            EndToEnd.compileInstantiateAndPrint input false
-            |> Helpers.runWithInt32Return
-
-        Assert.Equal(8, result)
-
-    [<Fact>]
-    let ``Can compile combined operation`` () =
-        let input = "5 - 2 + 7"
-
-        EndToEnd.compileInstantiateAndPrint input false
-
-    [<Fact>]
-    let ``Can compile multiplication operation`` () =
-        let input = "5 * 7"
-
-        let result = 
-            EndToEnd.compileInstantiateAndPrint input false
-            |> Helpers.runWithInt32Return
-
-        Assert.Equal(result, 35)
-
-    [<Fact>]
-    let ``Can compile division operation`` () =
-        let input = "10 / 5"
+    [<Theory>]
+    [<InlineData("10 + 10 / 5 * 2 - 1", 13)>]
+    [<InlineData("5 - 2 + 7", 10)>]
+    [<InlineData("10 / 5", 2)>]
+    [<InlineData("let x = 42; x", 42)>]
+    [<InlineData("let x = 42; let y = 1; x + y", 43)>]
+    [<InlineData("let x = 11 - 1; let y = 10 / 5; x + y * 2", 14)>]
+    [<InlineData("5 * 7", 35)>]
+    [<InlineData("5 - 2 + 7", 10)>]
+    [<InlineData("10 - 2", 8)>]
+    [<InlineData("5 + 2", 7)>]
+    [<InlineData("5", 5)>]
+    //[<InlineData(, 2)>]
+    let ``Can verify mathematical expression runs correctly`` (expression) (expectedResult) =
+        let input = $"func main() {{ {expression} }}"
 
         let bytes = EndToEnd.compileInstantiateAndPrint input false
 
         let result = Helpers.runWithInt32Return bytes
 
-        Assert.Equal(result, 2)
-
-    [<Fact>]
-    let ``Can compile and run combined operation`` () =
-        let input = "5 - 2 + 7"
-
-        let bytes = EndToEnd.compile input
-
-        let result = Helpers.runWithInt32Return bytes
-
-        Assert.Equal(result, 10)
-
-    [<Fact>]
-    let ``Can compile all operation formula`` () =
-        let input = "10 + 10 / 5 * 2 - 1"
-
-        let bytes = EndToEnd.compileInstantiateAndPrint input false
-
-        let result = Helpers.runWithInt32Return bytes
-
-        Assert.Equal(result, 13)
-
-    [<Fact>]
-    let ``Can compile and run simple let statement`` () =
-        let input = "let x = 42; x"
-
-        let bytes = EndToEnd.compileInstantiateAndPrint input false
-
-        let result = Helpers.runWithInt32Return bytes
-
-        Assert.Equal(result, 42)
-
-    [<Fact>]
-    let ``Can compile and run double let statement`` () =
-        let input = "let x = 42; let y = 1; x + y"
-
-        let bytes = EndToEnd.compileInstantiateAndPrint input false
-
-        let result = Helpers.runWithInt32Return bytes
-
-        Assert.Equal(result, 43)
-
-    [<Fact>]
-    let ``Can compile and run more complex let statements`` () =
-        let input = "let x = 11 - 1; let y = 10 / 5; x + y * 2"
-
-        let bytes = EndToEnd.compileInstantiateAndPrint input true
-
-        let result = Helpers.runWithInt32Return bytes
-
-        Assert.Equal(result, 14)
-
-    [<Fact>]
-    let ``Can compile with toWasmFlat with simple let statement`` () =
-        let input = "let x = 10; x"
-
-        let bytes = EndToEnd.compileToWasmFlat input
-
-        let expectedBytes = 
-            [| 
-                Wasm.INSTR_i32_CONST; 
-                Wasm.i32 10;
-                Wasm.INSTR_LOCAL_SET;
-                Wasm.i32 0;
-                Wasm.INSTR_LOCAL_GET;
-                Wasm.i32 0;
-                Wasm.INSTR_END
-            |]
-
-        Assert.Equivalent(expectedBytes, bytes)
-
-    [<Fact>]
-    let ``Can compile with toWasmFlat parameterless function definition`` () =
-        let input = "func add() { 42; }"
-
-        let bytes = EndToEnd.compileToWasmFlatDebug input
-
-        let expectedBytes = 
-            [| 
-                Wasm.INSTR_i32_CONST; 
-                Wasm.i32 42;
-                Wasm.INSTR_END
-            |]
-
-        Assert.Equal(expectedBytes.Length, bytes.Length)
-        Assert.Equivalent(expectedBytes, bytes)
-
-    [<Fact>]
-    let ``Can compile with toWasmFlat simple function definition`` () =
-        let input = "func add() { let x = 0; x }"
-
-        let bytes = EndToEnd.compileToWasmFlatDebug input
-
-        let expectedBytes = 
-            [| 
-                Wasm.INSTR_i32_CONST;
-                Wasm.i32 0;
-                Wasm.INSTR_LOCAL_SET;
-                Wasm.i32 0;
-                Wasm.INSTR_LOCAL_GET;
-                Wasm.i32 0;
-                Wasm.INSTR_END
-            |]
-
-        Assert.Equal(expectedBytes.Length, bytes.Length)
-        Assert.Equivalent(expectedBytes, bytes)
+        Assert.Equal(result, expectedResult)
 
     [<Fact>]
     let ``Can build SymbolMap with nested function definition`` () =

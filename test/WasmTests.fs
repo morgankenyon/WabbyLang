@@ -10,13 +10,13 @@ module WasmTests =
     open Helpers
 
 
-    let printWasm (bytes: byte array) =
-        let stringRepresentation = bytes
-                                    |> Array.map (fun by -> by.ToString())
-                                    |> String.concat "; "
-        //let str = stringRepresentation |> String.concat ""
-        System.IO.File.WriteAllText("./atest.txt", stringRepresentation)
-        System.IO.File.WriteAllBytes("./atest.wasm", bytes)
+    //let printWasm (bytes: byte array) =
+    //    let stringRepresentation = bytes
+    //                                |> Array.map (fun by -> by.ToString())
+    //                                |> String.concat "; "
+    //    //let str = stringRepresentation |> String.concat ""
+    //    System.IO.File.WriteAllText("./atest.txt", stringRepresentation)
+    //    System.IO.File.WriteAllBytes("./atest.wasm", bytes)
 
     [<Fact>]
     let ``My test`` () =
@@ -216,192 +216,273 @@ module WasmTests =
         let instance = linker.Instantiate(store, modd)
 
         Assert.True(true)
-    [<Fact>]
-    let ``Can convert IntegerLiteral Ast Module to WasmTree`` () =
-        let tokenPair = { Token = Token.NUMBER; Literal = "5" }
-        let literal = new Ast.IntegerLiteral(tokenPair, 5)
+    //[<Fact>]
+    //let ``Can convert IntegerLiteral Ast Module to WasmTree`` () =
+    //    let tokenPair = { Token = Token.NUMBER; Literal = "5" }
+    //    let literal = new Ast.IntegerLiteral(tokenPair, 5)
 
-        let expressionStatement = new Ast.ExpressionStatement(tokenPair, literal)
+    //    let expressionStatement = new Ast.ExpressionStatement(tokenPair, literal)
 
-        let modd = new Ast.Module([| expressionStatement |])
+    //    let modd = new Ast.Module([| expressionStatement |])
 
-        let wasmBytes = Wasm.toWasm modd
+    //    let wasmBytes = Wasm.toWasm modd
 
-        let result = runWithInt32Return wasmBytes
+    //    let result = runWithInt32Return wasmBytes
 
-        Assert.Equal(5, result)
+    //    Assert.Equal(5, result)
     
-    [<Fact>]
-    let ``Can convert addition InfixExpression Ast Module to WasmTree`` () =
-        let leftTokenPair = { Token = Token.NUMBER; Literal = "5" }
-        let leftExpr = new Ast.IntegerLiteral(leftTokenPair, 5)
+    //[<Fact>]
+    //let ``Can convert addition InfixExpression Ast Module to WasmTree`` () =
+    //    let leftTokenPair = { Token = Token.NUMBER; Literal = "5" }
+    //    let leftExpr = new Ast.IntegerLiteral(leftTokenPair, 5)
 
-        let rightTokenPair = { Token = Token.NUMBER; Literal = "2" }
-        let rightExpr = new Ast.IntegerLiteral(rightTokenPair, 2)
+    //    let rightTokenPair = { Token = Token.NUMBER; Literal = "2" }
+    //    let rightExpr = new Ast.IntegerLiteral(rightTokenPair, 2)
 
-        let operatorTokenPair = { Token = Token.PLUS; Literal = "+" }
+    //    let operatorTokenPair = { Token = Token.PLUS; Literal = "+" }
 
-        let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
+    //    let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
 
-        let expressionStatement = new Ast.ExpressionStatement(operatorTokenPair, infixExpr)
-        let modd = new Ast.Module([| expressionStatement |])
+    //    let expressionStatement = new Ast.ExpressionStatement(operatorTokenPair, infixExpr)
+    //    let modd = new Ast.Module([| expressionStatement |])
 
-        let wasmBytes = Wasm.toWasm modd
+    //    let wasmBytes = Wasm.toWasm modd
 
-        let result = runWithInt32Return wasmBytes
+    //    let result = runWithInt32Return wasmBytes
 
-        Assert.Equal(7, result)
+    //    Assert.Equal(7, result)
     
-    [<Fact>]
-    let ``Can convert subtraction InfixExpression Ast Module to WasmTree`` () =
-        let leftTokenPair = { Token = Token.NUMBER; Literal = "5" }
-        let leftExpr = new Ast.IntegerLiteral(leftTokenPair, 5)
+    //[<Fact>]
+    //let ``Can convert subtraction InfixExpression Ast Module to WasmTree`` () =
+    //    let leftTokenPair = { Token = Token.NUMBER; Literal = "5" }
+    //    let leftExpr = new Ast.IntegerLiteral(leftTokenPair, 5)
 
-        let rightTokenPair = { Token = Token.NUMBER; Literal = "2" }
-        let rightExpr = new Ast.IntegerLiteral(rightTokenPair, 2)
+    //    let rightTokenPair = { Token = Token.NUMBER; Literal = "2" }
+    //    let rightExpr = new Ast.IntegerLiteral(rightTokenPair, 2)
 
-        let operatorTokenPair = { Token = Token.MINUS; Literal = "-" }
+    //    let operatorTokenPair = { Token = Token.MINUS; Literal = "-" }
 
-        let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
+    //    let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
         
-        let expressionStatement = new Ast.ExpressionStatement(operatorTokenPair, infixExpr)
-        let modd = new Ast.Module([| expressionStatement |])
+    //    let expressionStatement = new Ast.ExpressionStatement(operatorTokenPair, infixExpr)
+    //    let modd = new Ast.Module([| expressionStatement |])
 
-        let wasmBytes = Wasm.toWasm modd
+    //    let wasmBytes = Wasm.toWasm modd
 
-        let result = runWithInt32Return wasmBytes
+    //    let result = runWithInt32Return wasmBytes
 
-        Assert.Equal(3, result)
+    //    Assert.Equal(3, result)
     
-    [<Fact>]
-    let ``Can convert multiplication InfixExpression Ast Module to WasmTree`` () =
-        let leftTokenPair = { Token = Token.NUMBER; Literal = "4" }
-        let leftExpr = new Ast.IntegerLiteral(leftTokenPair, 4)
+    //[<Fact>]
+    //let ``Can convert multiplication InfixExpression Ast Module to WasmTree`` () =
+    //    let leftTokenPair = { Token = Token.NUMBER; Literal = "4" }
+    //    let leftExpr = new Ast.IntegerLiteral(leftTokenPair, 4)
 
-        let rightTokenPair = { Token = Token.NUMBER; Literal = "2" }
-        let rightExpr = new Ast.IntegerLiteral(rightTokenPair, 2)
+    //    let rightTokenPair = { Token = Token.NUMBER; Literal = "2" }
+    //    let rightExpr = new Ast.IntegerLiteral(rightTokenPair, 2)
 
-        let operatorTokenPair = { Token = Token.ASTERISK; Literal = "*" }
+    //    let operatorTokenPair = { Token = Token.ASTERISK; Literal = "*" }
 
-        let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
+    //    let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
 
-        let expressionStatement = new Ast.ExpressionStatement(operatorTokenPair, infixExpr)
-        let modd = new Ast.Module([| expressionStatement |])
+    //    let expressionStatement = new Ast.ExpressionStatement(operatorTokenPair, infixExpr)
+    //    let modd = new Ast.Module([| expressionStatement |])
 
-        let wasmBytes = Wasm.toWasm modd
+    //    let wasmBytes = Wasm.toWasm modd
 
-        let result = runWithInt32Return wasmBytes
+    //    let result = runWithInt32Return wasmBytes
 
-        Assert.Equal(8, result)
+    //    Assert.Equal(8, result)
     
-    [<Fact>]
-    let ``Can convert division InfixExpression Ast Module to WasmTree`` () =
-        let leftTokenPair = { Token = Token.NUMBER; Literal = "6" }
-        let leftExpr = new Ast.IntegerLiteral(leftTokenPair, 6)
+    //[<Fact>]
+    //let ``Can convert division InfixExpression Ast Module to WasmTree`` () =
+    //    let leftTokenPair = { Token = Token.NUMBER; Literal = "6" }
+    //    let leftExpr = new Ast.IntegerLiteral(leftTokenPair, 6)
 
-        let rightTokenPair = { Token = Token.NUMBER; Literal = "3" }
-        let rightExpr = new Ast.IntegerLiteral(rightTokenPair, 3)
+    //    let rightTokenPair = { Token = Token.NUMBER; Literal = "3" }
+    //    let rightExpr = new Ast.IntegerLiteral(rightTokenPair, 3)
 
-        let operatorTokenPair = { Token = Token.SLASH; Literal = "/" }
+    //    let operatorTokenPair = { Token = Token.SLASH; Literal = "/" }
 
-        let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
+    //    let infixExpr = new Ast.InfixExpression(operatorTokenPair, leftExpr, operatorTokenPair.Literal, rightExpr)
         
-        let expressionStatement = new Ast.ExpressionStatement(operatorTokenPair, infixExpr)
+    //    let expressionStatement = new Ast.ExpressionStatement(operatorTokenPair, infixExpr)
         
-        let modd = new Ast.Module([| expressionStatement |])
+    //    let modd = new Ast.Module([| expressionStatement |])
 
-        let wasmBytes = Wasm.toWasm modd
+    //    let wasmBytes = Wasm.toWasm modd
                 
-        let result = runWithInt32Return wasmBytes
+    //    let result = runWithInt32Return wasmBytes
 
-        Assert.Equal(2, result)
+    //    Assert.Equal(2, result)
     
-    [<Fact>]
-    let ``Can build simple symbol table`` () =
-        let letStatement = Helpers.buildLetStatement "test" 6
+    //[<Fact>]
+    //let ``Can build simple symbol table`` () =
+    //    let letStatement = Helpers.buildLetStatement "test" 6
         
-        let modd = new Ast.Module([| letStatement |])
+    //    let modd = new Ast.Module([| letStatement |])
 
-        let symbolMap = Wasm.buildSymbolMap modd
+    //    let symbolTable = Wasm.buildSymbolMap2 modd
 
-        Assert.Equal(1, symbolMap.Count)
-        Assert.True(symbolMap.ContainsKey("test"))
-        let testEntry = symbolMap["test"]
-        Assert.Equal("test", testEntry.name)
-        Assert.Equal(0, testEntry.index)
-        Assert.Equal(Wasm.SymbolType.Local, testEntry.symbolType)
+    //    let symbolEntry = symbolTable.First.Value
+
+    //    match symbolEntry with
+    //    | Wasm.Nested nested ->            
+    //        Assert.Equal(1, nested.Count)
+    //        Assert.True(nested.ContainsKey("test"))
+    //        //let testEntry = nested["test"]
+    //        //Assert.Equal("test", testEntry.name)
+    //        //Assert.Equal(0, testEntry.index)
+    //        //Assert.Equal(Wasm.SymbolType.Local, testEntry.symbolType)
+    //    | Wasm.Locals _ -> raise (new Exception("Should be nested"))
+
     
-    [<Fact>]
-    let ``Can build symbol table from multiple lets`` () =
-        let first = Helpers.buildLetStatement "test1" 6
-        let second = Helpers.buildLetStatement "test2" 16
+    //[<Fact>]
+    //let ``Can build symbol table from multiple lets`` () =
+    //    let first = Helpers.buildLetStatement "test1" 6
+    //    let second = Helpers.buildLetStatement "test2" 16
         
-        let modd = new Ast.Module([| first; second |])
+    //    let modd = new Ast.Module([| first; second |])
 
-        let symbolMap = Wasm.buildSymbolMap modd
+    //    let symbolMap = Wasm.buildSymbolMap modd
 
-        Assert.Equal(2, symbolMap.Count)
-        Assert.True(symbolMap.ContainsKey("test1"))
-        Assert.True(symbolMap.ContainsKey("test2"))
+    //    Assert.Equal(2, symbolMap.Count)
+    //    Assert.True(symbolMap.ContainsKey("test1"))
+    //    Assert.True(symbolMap.ContainsKey("test2"))
         
-        let firstEntry = symbolMap["test1"]
-        Assert.Equal("test1", firstEntry.name)
-        Assert.Equal(0, firstEntry.index)
-        Assert.Equal(Wasm.SymbolType.Local, firstEntry.symbolType)
+    //    let firstEntry = symbolMap["test1"]
+    //    Assert.Equal("test1", firstEntry.name)
+    //    Assert.Equal(0, firstEntry.index)
+    //    Assert.Equal(Wasm.SymbolType.Local, firstEntry.symbolType)
         
-        let testEntry = symbolMap["test2"]
-        Assert.Equal("test2", testEntry.name)
-        Assert.Equal(1, testEntry.index)
-        Assert.Equal(Wasm.SymbolType.Local, testEntry.symbolType)
+    //    let testEntry = symbolMap["test2"]
+    //    Assert.Equal("test2", testEntry.name)
+    //    Assert.Equal(1, testEntry.index)
+    //    Assert.Equal(Wasm.SymbolType.Local, testEntry.symbolType)
     
-    [<Fact>]
-    let ``Can retrieve from symbol table`` () =
-        let first = Helpers.buildLetStatement "test1" 6
-        let second = Helpers.buildLetStatement "test2" 16
+    //[<Fact>]
+    //let ``Can retrieve from symbol table`` () =
+    //    let first = Helpers.buildLetStatement "test1" 6
+    //    let second = Helpers.buildLetStatement "test2" 16
         
-        let modd = new Ast.Module([| first; second |])
+    //    let modd = new Ast.Module([| first; second |])
 
-        let symbolMap = Wasm.buildSymbolMap modd
+    //    let symbolMap = Wasm.buildSymbolMap modd
 
-        let firstResult = Wasm.resolveSymbols symbolMap first.name.value
-        let secondResult = Wasm.resolveSymbols symbolMap second.name.value
+    //    let firstResult = Wasm.resolveSymbols symbolMap first.name.value
+    //    let secondResult = Wasm.resolveSymbols symbolMap second.name.value
 
-        match firstResult with
-        | Ok fr ->
-            Assert.Equal("test1", fr.name)
-            Assert.Equal(0, fr.index)
-        | Error msg -> Assert.Fail msg
+    //    match firstResult with
+    //    | Ok fr ->
+    //        Assert.Equal("test1", fr.name)
+    //        Assert.Equal(0, fr.index)
+    //    | Error msg -> Assert.Fail msg
         
-        match secondResult with
-        | Ok sr ->
-            Assert.Equal("test2", sr.name)
-            Assert.Equal(1, sr.index)
-        | Error msg -> Assert.Fail msg
+    //    match secondResult with
+    //    | Ok sr ->
+    //        Assert.Equal("test2", sr.name)
+    //        Assert.Equal(1, sr.index)
+    //    | Error msg -> Assert.Fail msg
     
-    [<Fact>]
-    let ``Can convert LetStatement Ast Module to WasmTree`` () =
-        let letStatement = Helpers.buildLetStatement "x" 42
-        let identifier = Helpers.buildIdentifierStatement "x"
+    //[<Fact>]
+    //let ``Can convert LetStatement Ast Module to WasmTree`` () =
+    //    let letStatement = Helpers.buildLetStatement "x" 42
+    //    let identifier = Helpers.buildIdentifierStatement "x"
         
-        let modd = new Ast.Module([| letStatement; identifier |])
+    //    let modd = new Ast.Module([| letStatement; identifier |])
 
-        let wasmBytes = Wasm.toWasm modd
+    //    let wasmBytes = Wasm.toWasm modd
                 
-        //printWasm wasmBytes
+    //    //printWasm wasmBytes
 
-        Assert.True(true)
+    //    Assert.True(true)
+    
+    //[<Fact>]
+    //let ``Can test build module`` () =
+
+    //    let wasmBytes = Wasm.buildFunctionModule()        
+                
+    //    printWasm wasmBytes
+        
+    //    let mainResult = runFuncWithInt32Return "main" wasmBytes
+    //    let backupResult = runFuncWithInt32Return "backup" wasmBytes
+
+    //    Assert.Equal(43, mainResult)
+    //    Assert.Equal(43, backupResult)
     
     [<Fact>]
-    let ``Can test build module`` () =
+    let ``Can test building symbol table`` () =
+        let input = "func add(x, y) { let sum = x + y; sum; }"
+        let symbolTable = EndToEnd.compileToBuildSymbolMap2 input
 
-        let wasmBytes = Wasm.buildFunctionModule()        
-                
-        printWasm wasmBytes
+        Assert.NotNull(symbolTable)
+        Assert.Equal(1, symbolTable.Count)
+
+        let symbolEntry = symbolTable.First.Value
+
+        match symbolEntry with
+        | Wasm.Nested nested ->
+            Assert.Equal(1, nested.Count)
+            Assert.True(nested.ContainsKey("add"))
+
+            let addEntries = nested["add"]
+
+            Assert.Equal(3, addEntries.Count)
+        | Wasm.Locals locals ->
+            raise (new Exception("Should have been nested"))
+    
+    [<Fact>]
+    let ``Can test building symbol table of triple nested function`` () =
+        let input = "func first() { second(1,2); } func second(x, y) { third(x, y); } func third(w,z) { w + z; }"
+        
+        let symbolTable = EndToEnd.compileToBuildSymbolMap2 input
+
+        Assert.NotNull(symbolTable)
+        Assert.Equal(1, symbolTable.Count)
+
+        let symbolEntry = symbolTable.First.Value
+
+        match symbolEntry with
+        | Wasm.Nested nested ->
+            Assert.Equal(3, nested.Count)
+
+            Assert.True(nested.ContainsKey("first"))
+            let firstEntries = nested["first"]
+            Assert.Equal(0, firstEntries.Count)
+
+            Assert.True(nested.ContainsKey("second"))
+            let secondEntries = nested["second"]
+            Assert.Equal(2, secondEntries.Count)
+
+            Assert.True(nested.ContainsKey("third"))
+            let thirdEntries = nested["third"]
+            Assert.Equal(2, thirdEntries.Count)
+
+        | Wasm.Locals _ ->
+            raise (new Exception("Should have been nested"))
+    
+    [<Fact>]
+    let ``Can test compiling simple function`` () =
+        let input = "func main() { let x = 42; x }"
+        
+        let wasmBytes = EndToEnd.compileModuleAndPrint input false
+
+        Assert.True(wasmBytes.Length > 0)
         
         let mainResult = runFuncWithInt32Return "main" wasmBytes
-        let backupResult = runFuncWithInt32Return "backup" wasmBytes
 
-        Assert.Equal(43, mainResult)
-        Assert.Equal(43, backupResult)
+        Assert.Equal(42, mainResult)
+    
+    [<Fact>]
+    let ``Can test compiling nested function`` () =
+        let input = "func main() { add(1,2); } func add(x, y) { x + y; }"
+        
+        let wasmBytes = EndToEnd.compileModuleAndPrint input true
+
+        Assert.True(wasmBytes.Length > 0)
+        
+        let mainResult = runFuncWithInt32Return "main" wasmBytes
+
+        Assert.Equal(3, mainResult)
 
 

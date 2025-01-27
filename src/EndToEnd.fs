@@ -5,26 +5,26 @@ module EndToEnd =
     let private printWasm (bytes: byte array) =
         let stringRepresentation = bytes
                                     |> Array.map (fun by -> by.ToString())
-                                    |> String.concat ""
+                                    |> String.concat "; "
         //let str = stringRepresentation |> String.concat ""
         System.IO.File.WriteAllText("./atest.txt", stringRepresentation)
         System.IO.File.WriteAllBytes("./atest.wasm", bytes)
         bytes
 
-    let compileToWasmFlat (input : string) =
-        let wasmBytes =
-            Lexer.createLexer input
-            |> Parser.createParser
-            |> Parser.parseModule
-            |> Wasm.toWasmFlat
-        wasmBytes
+    //let compileToWasmFlat (input : string) =
+    //    let wasmBytes =
+    //        Lexer.createLexer input
+    //        |> Parser.createParser
+    //        |> Parser.parseModule
+    //        |> Wasm.toWasmFlat
+    //    wasmBytes
 
-    let compileToWasmFlatDebug (input : string) =
-        let lexer = Lexer.createLexer input
-        let parser = Parser.createParser lexer
-        let modd = Parser.parseModule parser
-        let wasmBytes = Wasm.toWasmFlat modd
-        wasmBytes
+    //let compileToWasmFlatDebug (input : string) =
+    //    let lexer = Lexer.createLexer input
+    //    let parser = Parser.createParser lexer
+    //    let modd = Parser.parseModule parser
+    //    let wasmBytes = Wasm.toWasmFlat modd
+    //    wasmBytes
 
     let compileToBuildSymbolMap2 (input : string) =
         let lexer = Lexer.createLexer input
@@ -33,22 +33,39 @@ module EndToEnd =
         let scopes = Wasm.buildSymbolMap2 modd
         scopes
 
-    let compile (input: string) =
-        let wasmBytes = 
+    //let compile (input: string) =
+    //    let wasmBytes = 
+    //        Lexer.createLexer input
+    //        |> Parser.createParser
+    //        |> Parser.parseModule
+    //        |> Wasm.toWasm
+
+    //    wasmBytes
+
+    let compileModule (input : string) =
+        let wasmBytes =
             Lexer.createLexer input
             |> Parser.createParser
             |> Parser.parseModule
-            |> Wasm.toWasm
+            |> Wasm.compile
+        wasmBytes
 
+    let compileModuleAndPrint (input : string) (print: bool) =
+        let wasmBytes =
+            if print then
+                compileModule input
+                |> printWasm
+            else
+                compileModule input
         wasmBytes
     
     let compileInstantiateAndPrint (input: string) (print: bool) =
         let wasmBytes =
             if print then
-                compile input
+                compileModule input
                 |> printWasm
             else
-                compile input
+                compileModule input
         let engine = new Engine()
 
         let modd = Module.FromBytes(engine, "wauxLang", wasmBytes)

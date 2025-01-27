@@ -49,4 +49,4 @@ module ConvertingTests =
 
         let bytes = numbers |> Array.map (fun num -> (byte) num)
         Assert.NotNull bytes
-        Helpers.printWasm bytes
+        //Helpers.printWasm bytes

@@ -415,7 +415,7 @@ module ParserTests =
 
         AssertNoParseErrors parser
 
-        Assert.Equal(1, modd.statements.Length)
+        Assert.Equal(2, modd.statements.Length)
 
         //let fnLit = asFunction modd.statements.[0]
 
