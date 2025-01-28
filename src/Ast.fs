@@ -92,6 +92,7 @@ module Ast =
         member this.token = token
         member this.func = func
         member this.arguments = arguments
+        member this.funcName = this.func.Str()
         interface Expression with
             member this.NodeType = NodeType.Expression
             member this.ExprType () = ExpressionType.CallExpression

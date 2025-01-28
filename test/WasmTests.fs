@@ -425,9 +425,10 @@ module WasmTests =
             Assert.Equal(1, nested.Count)
             Assert.True(nested.ContainsKey("add"))
 
-            let addEntries = nested["add"]
+            let (addEntries, addIndex) = nested["add"]
 
             Assert.Equal(3, addEntries.Count)
+            Assert.Equal(0, addIndex)
         | Wasm.Locals locals ->
             raise (new Exception("Should have been nested"))
     
@@ -447,16 +448,19 @@ module WasmTests =
             Assert.Equal(3, nested.Count)
 
             Assert.True(nested.ContainsKey("first"))
-            let firstEntries = nested["first"]
+            let (firstEntries, firstIndex) = nested["first"]
             Assert.Equal(0, firstEntries.Count)
+            Assert.Equal(0, firstIndex)
 
             Assert.True(nested.ContainsKey("second"))
-            let secondEntries = nested["second"]
+            let (secondEntries, secondIndex) = nested["second"]
             Assert.Equal(2, secondEntries.Count)
+            Assert.Equal(1, secondIndex)
 
             Assert.True(nested.ContainsKey("third"))
-            let thirdEntries = nested["third"]
+            let (thirdEntries, thirdIndex) = nested["third"]
             Assert.Equal(2, thirdEntries.Count)
+            Assert.Equal(2, thirdIndex)
 
         | Wasm.Locals _ ->
             raise (new Exception("Should have been nested"))
@@ -477,12 +481,24 @@ module WasmTests =
     let ``Can test compiling nested function`` () =
         let input = "func main() { add(1,2); } func add(x, y) { x + y; }"
         
-        let wasmBytes = EndToEnd.compileModuleAndPrint input true
+        let wasmBytes = EndToEnd.compileModuleAndPrint input false
 
         Assert.True(wasmBytes.Length > 0)
         
         let mainResult = runFuncWithInt32Return "main" wasmBytes
 
         Assert.Equal(3, mainResult)
+    
+    [<Fact>]
+    let ``Can test compiling triple nested function`` () =
+        let input = "func main() { add(1,2); } func add(x, y) { let mul = multi(x, y); mul + x + y; } func multi(z, v) { z * v; }"
+        
+        let wasmBytes = EndToEnd.compileModuleAndPrint input true
+
+        Assert.True(wasmBytes.Length > 0)
+        
+        let mainResult = runFuncWithInt32Return "main" wasmBytes
+
+        Assert.Equal(5, mainResult)
 
 
