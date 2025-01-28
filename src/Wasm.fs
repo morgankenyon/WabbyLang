@@ -278,14 +278,6 @@ module Wasm =
         | Ast.StatementType.FunctionStatement ->
             let fn = state :?> Ast.FunctionStatement
 
-            //Don't really know why I wrote this or if it's required
-            //might have been programming here instead of in the 
-            //defineFunctionDecls
-            //let fnName = fn.name.value
-            //let parameterNames =
-            //    fn.parameters
-            //    |> Array.map (fun pm -> pm.value)
-
             let wasmBytes = statementToWasmTree fn.body symbols symbolMap
             let inner = [| wasmBytes |]
             let node = Node (None, Some inner)

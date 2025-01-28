@@ -27,7 +27,7 @@ TBD
 
 ## Current Examples
 
-Right now I have basic mathematical operations compiling into wasm. For the examples below, I'm converting the compiled wasm to wat for visual purposes. But the output of the compiler is wasm byte code.
+Currently I have basic mathematical operations and function calling working. For the examples below, I'm converting the compiled wasm to wat for visual purposes. But the output of the compiler is wasm byte code.
 
 ### Adding
 
@@ -97,4 +97,45 @@ Compiles into:
       (i32.const 42))
     (local.get $l0)))
 
+```
+
+### Function Calls
+
+```
+func main() { 
+  add(1,2); 
+}
+func add(x, y) {
+  let mul = multi(x, y);
+  mul + x + y;
+} 
+func multi(z, v) {
+  z * v; 
+}
+```
+
+```wat
+(module
+  (type $t0 (func (result i32)))
+  (type $t1 (func (param i32 i32) (result i32)))
+  (type $t2 (func (param i32 i32) (result i32)))
+  (func $main (export "main") (type $t0) (result i32)
+    (call $add
+      (i32.const 1)
+      (i32.const 2)))
+  (func $add (export "add") (type $t1) (param $p0 i32) (param $p1 i32) (result i32)
+    (local $l2 i32)
+    (local.set $l2
+      (call $multi
+        (local.get $p0)
+        (local.get $p1)))
+    (i32.add
+      (i32.add
+        (local.get $l2)
+        (local.get $p0))
+      (local.get $p1)))
+  (func $multi (export "multi") (type $t2) (param $p0 i32) (param $p1 i32) (result i32)
+    (i32.mul
+      (local.get $p0)
+      (local.get $p1))))
 ```
