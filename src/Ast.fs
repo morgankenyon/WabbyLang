@@ -13,15 +13,16 @@ module Ast =
     | IntegerLiteral
     | Identifier
     | CallExpression
+    | IfElseExpression
 
     
-    type AstType =
-    | Module
-    | InfixExpression
-    | IntegerLiteral
-    | ExpressionStatement
-    | Identifier
-    | LetStatement
+    //type AstType =
+    //| Module
+    //| InfixExpression
+    //| IntegerLiteral
+    //| ExpressionStatement
+    //| Identifier
+    //| LetStatement
 
         //| LongLiteral
 
@@ -67,6 +68,57 @@ module Ast =
             member this.ExprType () = ExpressionType.Identifier
             member this.TokenLiteral () = token.Literal
             member this.Str () = value
+    
+    type BlockStatement(token: TokenPair, statements: Statement[]) =
+        member this.token = token
+        member this.statements = statements
+        interface Statement with
+            member this.NodeType = NodeType.Statement
+            member this.StateType () = StatementType.BlockStatement
+            member this.TokenLiteral () = this.token.Literal             
+            member this.Str () =
+                this.statements
+                    |> Array.map (fun s -> s.Str())
+                    |> Array.reduce (fun a b -> a + b)
+
+    type FunctionStatement(token: TokenPair, name: Identifier, parameters: Identifier[], body: BlockStatement) =
+        member this.token = token
+        member this.name = name
+        member this.parameters = parameters
+        member this.body = body
+        interface Statement with
+            member this.NodeType = NodeType.Statement
+            member this.StateType () = StatementType.FunctionStatement
+            member this.TokenLiteral () = this.token.Literal
+            member this.Str () = 
+                let paraStr = 
+                    this.parameters
+                        |> Array.map (fun s -> (s :> Expression).Str())
+                        |> Array.reduce (fun a b -> sprintf "%s, %s" a b)
+                
+                let bodyStr = (this.body :> Statement).Str()
+                sprintf "%s (%s) %s" this.token.Literal paraStr bodyStr
+
+    type IfElseExpression(token: TokenPair, condition: Expression, consequence: BlockStatement, alternative: BlockStatement option) =
+        member this.token = token
+        member this.condition = condition
+        member this.consequence = consequence
+        member this.alternative = alternative
+        interface Expression with
+            member this.NodeType = NodeType.Expression
+            member this.TokenLiteral () = this.token.Literal
+            member this.ExprType () = ExpressionType.IfElseExpression
+            member this.Str () = 
+                let ifStr = this.condition.Str()
+                let consequenceStr = (this.consequence :> Statement).Str()
+
+                let firstStr = sprintf "if%s %s" ifStr consequenceStr
+
+                match this.alternative with
+                | Some alt ->
+                    let altStr = (alt :> Statement).Str()
+                    sprintf "%selse %s" firstStr altStr
+                | None -> firstStr
 
     type LetStatement(token: TokenPair, name: Identifier, value: Expression) =
         member this.token = token
@@ -120,36 +172,6 @@ module Ast =
                 let rightStr = this.right.Str()
 
                 sprintf "(%s %s %s)"  leftStr this.operator rightStr
-    
-    type BlockStatement(token: TokenPair, statements: Statement[]) =
-        member this.token = token
-        member this.statements = statements
-        interface Statement with
-            member this.NodeType = NodeType.Statement
-            member this.StateType () = StatementType.BlockStatement
-            member this.TokenLiteral () = this.token.Literal             
-            member this.Str () =
-                this.statements
-                    |> Array.map (fun s -> s.Str())
-                    |> Array.reduce (fun a b -> a + b)
-
-    type FunctionStatement(token: TokenPair, name: Identifier, parameters: Identifier[], body: BlockStatement) =
-        member this.token = token
-        member this.name = name
-        member this.parameters = parameters
-        member this.body = body
-        interface Statement with
-            member this.NodeType = NodeType.Statement
-            member this.StateType () = StatementType.FunctionStatement
-            member this.TokenLiteral () = this.token.Literal
-            member this.Str () = 
-                let paraStr = 
-                    this.parameters
-                        |> Array.map (fun s -> (s :> Expression).Str())
-                        |> Array.reduce (fun a b -> sprintf "%s, %s" a b)
-                
-                let bodyStr = (this.body :> Statement).Str()
-                sprintf "%s (%s) %s" this.token.Literal paraStr bodyStr
 
     type IntegerLiteral(token: TokenPair, value: int32) =
         member this.token = token

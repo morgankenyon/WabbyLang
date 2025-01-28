@@ -11,10 +11,12 @@
             FUNC
         else if ident = "let" then
             LET
-        //else if ident = "if" then
-        //    IF
-        //else if ident = "else" then
-        //    ELSE
+        else if ident = "if" then
+            IF
+        else if ident = "else" then
+            ELSE
+        else if ident = "elif" then
+            ELIF
         //else if ident = "return" then
         //    RETURN
         //else if ident = "true" then

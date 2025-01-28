@@ -19,15 +19,33 @@ module ParserTests =
         | :? Ast.Identifier as iden ->
             Ok iden
         | _ -> Error "Not an identifier"
+    let asIfElse (e: Ast.Expression) =
+        match e with
+        | :? Ast.IfElseExpression as ifelse -> Ok ifelse
+        | _ -> Error "Not an ifElse"
+    let asBlock (s: Ast.Statement) =
+        match s with
+        | :? Ast.BlockStatement as b -> Ok b
+        | _ -> Error "Not a block statement"
     let asExpressionStatement (s: Ast.Statement) =
         match s with
         | :? Ast.ExpressionStatement as es -> 
             Ok es
         | _ -> Error "Not an expression statement"
+    let asExpressionStatementFromBlock (s: Ast.Statement) (index: int) =
+        let blockResult = asBlock s
+        match blockResult with
+        | Ok bl -> asExpressionStatement bl.statements[index]
+        | Error msg -> Error msg
     let asIdentifierFromStatement (s: Ast.Statement) =
         let asExprState = asExpressionStatement s
         match asExprState with
         | Ok es -> asIdentifier es.expression
+        | Error msg -> Error msg
+    let asIfElseFromStatement (s: Ast.Statement) =
+        let asExprState = asExpressionStatement s
+        match asExprState with
+        | Ok es -> asIfElse es.expression
         | Error msg -> Error msg
     let asFunction (s: Ast.Statement) =
         match s with
@@ -416,6 +434,73 @@ module ParserTests =
         AssertNoParseErrors parser
 
         Assert.Equal(2, modd.statements.Length)
-        
+
+    [<Fact>]
+    let ``Can parse simple if else statement``() =
+        let input = "if (x) { 42 } else { 99 }"
+
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+
+        AssertNoParseErrors parser
+
+        Assert.Equal(1, modd.statements.Length)
+
+        let ifElseResult = asIfElseFromStatement(modd.statements.[0])
+
+        match ifElseResult with
+        | Ok ifElseExpr ->
+            testIdentifier ifElseExpr.condition "x"
+
+            //test consequence
+            let consequenceResult = asExpressionStatementFromBlock ifElseExpr.consequence 0
+            match consequenceResult with
+            | Ok conExpr ->
+                testIntegerLiteral conExpr.expression 42
+            | Error msg -> af msg
+
+            //testing alternative
+            Assert.True(ifElseExpr.alternative.IsSome)
+            let altExprResult = asExpressionStatementFromBlock ifElseExpr.alternative.Value 0
+
+            match altExprResult with
+            | Ok altExpr ->
+                testIntegerLiteral altExpr.expression 99
+            | Error msg -> af msg
+        | Error msg -> af msg
+    
+    //[<Fact>]
+    //let ``Can test if else expression`` () =
+    //    let input = "if (x < y) { x } else { y }"
+    
+    //    let lexer = createLexer input
+    //    let parser = createParser lexer
+    //    let program = parseProgram parser
+
+    //    AssertNoParseErrors parser
+
+    //    Assert.Equal(1, program.statements.Length)
+
+    //    Assert.True(canDowncastToExpressionStatement(program.statements.[0]))
+
+    //    let es = program.statements.[0] :?> Ast.ExpressionStatement
+
+    //    Assert.True(canDowncastToIfExpression(es.expression))
+
+    //    let ifExpr = es.expression :?> Ast.IfExpression
+
+    //    Assert.True(ifExpr.alternative.IsSome)
+
+    //    let alternative = ifExpr.alternative.Value
+
+    //    Assert.Equal(1, alternative.statements.Length)
+
+    //    let alternativeStatement = alternative.statements.[0]
+    //    Assert.True(canDowncastToExpressionStatement(alternativeStatement))
+
+    //    let altExpr = alternativeStatement :?> Ast.ExpressionStatement
+
+    //    testIdentifier altExpr.expression "y"
 
 

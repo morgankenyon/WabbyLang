@@ -24,6 +24,9 @@
         //keywords
         | FUNC
         | LET
+        | IF
+        | ELSE
+        | ELIF
 
     type TokenPair =
         {

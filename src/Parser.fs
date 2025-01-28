@@ -252,6 +252,36 @@ module Parser =
 
         block
 
+    let parseIfExpression p =
+        let curToken = p.curToken
+
+        if not (expectPeek p Token.LPAREN) then None
+        else
+            nextToken p
+
+            let condition = parseExpression p ExprPrecedence.LOWEST
+
+            let notRParen = not (expectPeek p Token.RPAREN)
+            let notLBrace = not (expectPeek p Token.LBRACE)
+
+            if notRParen || notLBrace || condition.IsNone then None
+            else 
+                let consequence = parseBlockStatement p
+
+                if peekTokenIs p Token.ELSE then
+                    nextToken p
+
+                    if not (expectPeek p Token.LBRACE) then
+                        None
+                    else
+                        let alternative = parseBlockStatement p
+
+                        new Ast.IfElseExpression(curToken, condition.Value, consequence, Some alternative)
+                        |> toSomeExpr
+                else
+                    new Ast.IfElseExpression(curToken, condition.Value, consequence, None)
+                    |> toSomeExpr
+
     let parseExpressionList p endToken =
         let exprList = new ResizeArray<Ast.Expression>()
 
@@ -349,7 +379,7 @@ module Parser =
         //prefixFns.Add(TokenType.TRUE, parseBoolean)
         //prefixFns.Add(TokenType.FALSE, parseBoolean)
         prefixFns.Add(Token.LPAREN, parseGroupedExpression)
-        //prefixFns.Add(TokenType.IF, parseIfExpression)
+        prefixFns.Add(Token.IF, parseIfExpression)
         //prefixFns.Add(Token.FUNC, parseFunctionLiteral)
         //prefixFns.Add(TokenType.STRING, parseStringLiteral)
         //prefixFns.Add(TokenType.LBRACKET, parseArrayLiteral)

@@ -175,4 +175,57 @@ module LexerTests =
         let input = "func add(x, y) { x + y; };"
         let lexer = Lexer.createLexer input
         expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
+
+    [<Fact>]
+    let ``Can Lex simple if else statement``() =
+        let expectedTokensRaw: (Token * string) list =
+            [
+                (Token.IF, "if");
+                (Token.LPAREN, "(");
+                (Token.IDENT, "x");
+                (Token.RPAREN, ")");
+                (Token.LBRACE, "{");
+                (Token.NUMBER, "42");
+                (Token.RBRACE, "}");
+                (Token.ELSE, "else");
+                (Token.LBRACE, "{");
+                (Token.NUMBER, "99");
+                (Token.RBRACE, "}");
+                (Token.EOF, "");
+            ]
+        let expectedTokens = buildTokenTypes expectedTokensRaw
+
+        let input = "if (x) { 42 } else { 99 }"
+        let lexer = Lexer.createLexer input
+        expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
+
+    [<Fact(Skip = "Not implementing elif for now")>]
+    let ``Can Lex if else if statement``() =
+        let expectedTokensRaw: (Token * string) list =
+            [
+                (Token.IF, "if");
+                (Token.LPAREN, "(");
+                (Token.IDENT, "x");
+                (Token.RPAREN, ")");
+                (Token.LBRACE, "{");
+                (Token.NUMBER, "42");
+                (Token.RBRACE, "}");
+                (Token.ELIF, "elif");
+                (Token.LPAREN, "(");
+                (Token.IDENT, "x");
+                (Token.RPAREN, ")");
+                (Token.LBRACE, "{");
+                (Token.NUMBER, "32");
+                (Token.RBRACE, "}");
+                (Token.ELSE, "else");
+                (Token.LBRACE, "{");
+                (Token.NUMBER, "99");
+                (Token.RBRACE, "}");
+                (Token.EOF, "");
+            ]
+        let expectedTokens = buildTokenTypes expectedTokensRaw
+
+        let input = "if (x) { 42 } elif (x) { 32 } else { 99 }"
+        let lexer = Lexer.createLexer input
+        expectedTokens |> List.iter (fun et -> AssertTokens(lexer, et))
             
