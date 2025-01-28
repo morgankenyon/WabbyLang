@@ -1,6 +1,7 @@
 ﻿namespace Waux.Lang.Test
 
 module EndToEndTests =
+    open Helpers
     open Xunit
     open Waux.Lang
     open Wasmtime
@@ -23,7 +24,7 @@ module EndToEndTests =
 
         let bytes = EndToEnd.compileInstantiateAndPrint input false
 
-        let result = Helpers.runWithInt32Return bytes
+        let result = runWithInt32Return bytes
 
         Assert.Equal(result, expectedResult)
 
@@ -42,3 +43,15 @@ module EndToEndTests =
             Assert.Equal(2, nested.Count)
         | Wasm.Locals _ ->
             raise (new System.Exception("Should be nested"))
+    
+    [<Fact>]
+    let ``Can test compiling triple nested function`` () =
+        let input = "func main() { add(1,2); } func add(x, y) { let mul = multi(x, y); mul + x + y; } func multi(z, v) { z * v; }"
+        
+        let wasmBytes = EndToEnd.compileModuleAndPrint input true
+
+        Assert.True(wasmBytes.Length > 0)
+        
+        let mainResult = runFuncWithInt32Return "main" wasmBytes
+
+        Assert.Equal(5, mainResult)
