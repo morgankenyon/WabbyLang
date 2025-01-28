@@ -2,6 +2,7 @@
 
 module Arguments =
     open Argu
+    open Waux.Lang
 
     type CliError =
     | ArgumentsNotSpecified
@@ -40,6 +41,19 @@ module Arguments =
         | f when f.Contains(Filename) ->
             let filename = f.GetResult(Filename)
             printfn "Compiling: %s" filename
+
+            let fileText = System.IO.File.ReadAllText filename
+
+            let name = System.IO.Path.GetFileNameWithoutExtension filename
+            let fileInfo = new System.IO.FileInfo(filename)
+            let directory = fileInfo.DirectoryName
+            //printfn "%s" directory
+            let wauxFilename = $"{directory}\{name}.wasm"
+
+            //printfn "%s" wauxFilename
+            let wasmBytes = EndToEnd.compileModule fileText
+
+            System.IO.File.WriteAllBytes(wauxFilename, wasmBytes)
             Ok ()
         | _ -> Error ArgumentsNotSpecified
 
