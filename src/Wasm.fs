@@ -16,6 +16,10 @@ module Wasm =
     let TYPE_FUNCTION = 96uy
     
     [<Literal>]
+    let INSTR_IF = 4uy
+    [<Literal>]
+    let INSTR_ELSE = 5uy
+    [<Literal>]
     let i32_VAL_TYPE = 127uy
     [<Literal>]
     let INSTR_i32_CONST = 65uy
@@ -53,6 +57,9 @@ module Wasm =
     let INSTR_CALL = 16uy
     [<Literal>]
     let INSTR_DROP = 26uy
+
+    [<Literal>]
+    let EMPTY = 64uy
 
     type WasmValueBytes =
     | Value of byte
@@ -183,6 +190,21 @@ module Wasm =
                                 |> Array.collect id
         Array.concat [ magic(); version(); flattenedSections ]
     
+    type blockType =
+    | Empty_
+    | I32
+    | I64
+    | F32
+    | F64
+
+    let getBlockType bType=
+        match bType with
+        | Empty_ -> EMPTY
+        | I32 -> i32_VAL_TYPE
+        | I64 -> i64_VAL_TYPE
+        | F32 -> f32_VAL_TYPE
+        | F64 -> f64_VAL_TYPE
+
     let getOperator op =
         match op with
         | "+" -> INSTR_i32_ADD
@@ -245,6 +267,21 @@ module Wasm =
                 arguTrees <- Array.concat [ arguTrees; [| argTree |] ]
             let wasmBytes = [| INSTR_CALL; i32 index |]
             let node = Node (Some [| Values wasmBytes |], Some arguTrees)
+            node
+        | Ast.ExpressionType.IfElseExpression ->
+            let ifElseExpr = expr :?> Ast.IfElseExpression
+
+            let exprWasm = expressionToWasmTree ifElseExpr.condition symbols symbolMap
+            //let ifCommand = [| INSTR_IF; getBlockType I32 |]
+            let ifCommandWasm = Node (Some [| Values [| INSTR_IF; getBlockType I32 |] |], None)
+            let thenBlockWasm = statementToWasmTree ifElseExpr.consequence symbols symbolMap
+            //let elseCommand = [| INSTR_ELSE |]
+            let elseCommandWasm = Node (Some [| Values [| INSTR_ELSE |] |], None)
+            let elseBlockWasm = statementToWasmTree ifElseExpr.alternative.Value symbols symbolMap
+            let endingWasm = Node (Some [| Values [| INSTR_END |] |], None)
+
+            let ifElseWasm = [| exprWasm; ifCommandWasm; thenBlockWasm; elseCommandWasm; elseBlockWasm; endingWasm |]
+            let node = Node (None, Some ifElseWasm)
             node
         | _ ->
             Empty
@@ -367,7 +404,7 @@ module Wasm =
                     symbolType = SymbolType.Local
                 }
             match scopes.Last.Value with
-            | Nested inner ->
+            | Nested _ ->
                 raise (new Exception("Should have been a local entry here instead of nested"))
             | Locals locals ->
                 locals.Add(name, symbolEntry)

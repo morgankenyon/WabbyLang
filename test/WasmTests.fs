@@ -488,5 +488,22 @@ module WasmTests =
         let mainResult = runFuncWithInt32Return "main" wasmBytes
 
         Assert.Equal(3, mainResult)
+    
+    [<Fact>]
+    let ``Can test compiling if else statement`` () =
+        let input = """
+func isZero(x) {
+    let result = if (x) { 0 } else { 1 };
+    result
+}"""
+        
+        let wasmBytes = EndToEnd.compileModuleAndPrint input true
+
+        Assert.True(wasmBytes.Length > 0)
+        
+        let isZero = runInt32FuncWithInt32Return "isZero" wasmBytes
+        
+        Assert.Equal(1, isZero 0)
+        Assert.Equal(0, isZero 1)
 
 

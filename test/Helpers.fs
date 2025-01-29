@@ -4,8 +4,8 @@ module Helpers =
     open Models
     open Wasmtime
     open Waux.Lang
-    let runFuncWithInt32Return (funcName : string) (wasmBytes : byte array)  =
-                
+
+    let private buildInstance (wasmBytes : byte array) =                
         let engine = new Engine()
 
         let modd = Module.FromBytes(engine, "wauxLang", wasmBytes)
@@ -13,10 +13,20 @@ module Helpers =
         let linker = new Linker(engine)
         let store = new Store(engine)
 
-        let instance = linker.Instantiate(store, modd)
+        linker.Instantiate(store, modd)
+        
+    let runFuncWithInt32Return (funcName : string) (wasmBytes : byte array)  =
+        let instance = buildInstance wasmBytes
 
         let main = instance.GetFunction<int32>(funcName)
         main.Invoke()
+
+    let runInt32FuncWithInt32Return (funcName : string) (wasmBytes : byte array) (param : int) =
+        let instance = buildInstance wasmBytes
+
+        let func = instance.GetFunction<int32, int32>(funcName)
+        func.Invoke(param)
+        
 
     let runWithInt32Return (wasmBytes : byte array) =
         runFuncWithInt32Return "main" wasmBytes

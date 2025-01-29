@@ -91,6 +91,7 @@ module ParserTests =
             Assert.Equal(i.token.Literal, (sprintf "%d" value))
         | None ->
             Assert.False(true, $"{il.TokenLiteral()} is not an integer")
+
     let testIdentifier (ie: Ast.Expression) (value) =
         let iden = asIdentifier ie
         
@@ -100,6 +101,13 @@ module ParserTests =
             Assert.True(valueEqual, "testing values")
             Assert.Equal(value, ie.TokenLiteral())
         | Error msg -> Assert.Fail msg
+    let testIdentifierFromStatement (s: Ast.Statement) (value) =
+        let exprResult = asExpressionStatement s
+        
+        match exprResult with 
+        | Ok exprState ->
+            testIdentifier exprState.expression value
+        | Error msg -> af msg
 
     let testStrInfixExpression (ie : Ast.Expression) (left) (operator) (right) =
         let infixResult = asInfix ie
@@ -136,6 +144,7 @@ module ParserTests =
                 let error = p.errors.ToArray() |> Array.reduce (fun a b -> sprintf "%s\n%s" a b)
                 error
             else ""
+        
         Assert.True(0 = p.errors.Count, errorMessage)
 
 
@@ -470,37 +479,47 @@ module ParserTests =
             | Error msg -> af msg
         | Error msg -> af msg
     
-    //[<Fact>]
-    //let ``Can test if else expression`` () =
-    //    let input = "if (x < y) { x } else { y }"
-    
-    //    let lexer = createLexer input
-    //    let parser = createParser lexer
-    //    let program = parseProgram parser
+    [<Fact>]
+    let ``Can parse if else statement that returns to let``() =
+        let input = """
+func isZero(x) {
+    let result = if (x) { 0 } else { 1 };
+    result
+}"""
 
-    //    AssertNoParseErrors parser
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
 
-    //    Assert.Equal(1, program.statements.Length)
+        AssertNoParseErrors parser
 
-    //    Assert.True(canDowncastToExpressionStatement(program.statements.[0]))
+        Assert.Equal(1, modd.statements.Length)
 
-    //    let es = program.statements.[0] :?> Ast.ExpressionStatement
+        let fnResult = asFunction modd.statements.[0]
 
-    //    Assert.True(canDowncastToIfExpression(es.expression))
+        match fnResult with
+        | Ok fnState ->
+            Assert.Equal(1, fnState.parameters.Length)
+            Assert.Equal(2, fnState.body.statements.Length)
+            
+            let firstState = fnState.body.statements[0]
+            let secondState = fnState.body.statements[1]
 
-    //    let ifExpr = es.expression :?> Ast.IfExpression
+            let letResult = asLetStatement firstState
+            match letResult with
+            | Ok letState ->
+                Assert.Equal("result", letState.name.value)
+                let ifElseResult = asIfElse letState.value
 
-    //    Assert.True(ifExpr.alternative.IsSome)
+                match ifElseResult with
+                | Ok ifElseExpr ->                    
+                    testIdentifier ifElseExpr.condition "x"
+                | Error msg -> af msg
+            | Error msg -> af msg
 
-    //    let alternative = ifExpr.alternative.Value
-
-    //    Assert.Equal(1, alternative.statements.Length)
-
-    //    let alternativeStatement = alternative.statements.[0]
-    //    Assert.True(canDowncastToExpressionStatement(alternativeStatement))
-
-    //    let altExpr = alternativeStatement :?> Ast.ExpressionStatement
-
-    //    testIdentifier altExpr.expression "y"
+            testIdentifierFromStatement secondState "result"
+            
+            
+        | Error msg -> af msg
 
 
