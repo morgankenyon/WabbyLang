@@ -33,25 +33,24 @@ module EndToEndTests =
         let input = "func doIt() { add(1,2); } func add(x, y) { x + y; }"
 
         let symbolScope = EndToEnd.compileToBuildSymbolMap2 input
-        
+
         Assert.Equal(1, symbolScope.Count)
 
         let symbolEntry = symbolScope.First.Value
 
         match symbolEntry with
-        | Wasm.Nested nested ->
-            Assert.Equal(2, nested.Count)
-        | Wasm.Locals _ ->
-            raise (new System.Exception("Should be nested"))
-    
+        | Wasm.Nested nested -> Assert.Equal(2, nested.Count)
+        | Wasm.Locals _ -> raise (new System.Exception("Should be nested"))
+
     [<Fact>]
     let ``Can test compiling triple nested function`` () =
-        let input = "func main() { add(1,2); } func add(x, y) { let mul = multi(x, y); mul + x + y; } func multi(z, v) { z * v; }"
-        
+        let input =
+            "func main() { add(1,2); } func add(x, y) { let mul = multi(x, y); mul + x + y; } func multi(z, v) { z * v; }"
+
         let wasmBytes = EndToEnd.compileModuleAndPrint input true
 
         Assert.True(wasmBytes.Length > 0)
-        
+
         let mainResult = runFuncWithInt32Return "main" wasmBytes
 
         Assert.Equal(5, mainResult)

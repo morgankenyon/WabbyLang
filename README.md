@@ -139,3 +139,14 @@ func multi(z, v) {
       (local.get $p0)
       (local.get $p1))))
 ```
+
+## Code Formatting
+
+This repo currently uses [fantomas](https://fsprojects.github.io/fantomas/) in order to format the compiler.
+
+* To install the tool
+  * `dotnet tool install fantomas`
+  * `dotnet tool restore`
+* To run and format everything
+  * `./format.bat`
+  * Or `dotnet fantomas -r .`

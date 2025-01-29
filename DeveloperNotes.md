@@ -15,3 +15,7 @@ Error: readWasm failed:
 0000026: error: expected valid local type
 ```
 
+
+```
+function body must end with END opcode
+```

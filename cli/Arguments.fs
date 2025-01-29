@@ -4,8 +4,7 @@ module Arguments =
     open Argu
     open Waux.Lang
 
-    type CliError =
-    | ArgumentsNotSpecified
+    type CliError = | ArgumentsNotSpecified
 
     [<CliPrefix(CliPrefix.Dash)>]
     type CompileArgs =
@@ -16,9 +15,8 @@ module Arguments =
                 | Filename _ -> "The .waux file needing to compile"
 
     type CmdArgs =
-        | [<AltCommandLine("-p")>] Print of message:string
+        | [<AltCommandLine("-p")>] Print of message: string
         | [<CliPrefix(CliPrefix.None)>] Compile of ParseResults<CompileArgs>
-    with
         interface IArgParserTemplate with
             member this.Usage =
                 match this with
@@ -32,9 +30,9 @@ module Arguments =
             match err with
             | ArgumentsNotSpecified -> 1
 
-    let runPrint print = 
+    let runPrint print =
         printfn "%s" print
-        Ok ()
+        Ok()
 
     let compile (parseResults: ParseResults<CompileArgs>) =
         match parseResults with
@@ -54,6 +52,5 @@ module Arguments =
             let wasmBytes = EndToEnd.compileModule fileText
 
             System.IO.File.WriteAllBytes(wauxFilename, wasmBytes)
-            Ok ()
+            Ok()
         | _ -> Error ArgumentsNotSpecified
-
