@@ -309,10 +309,8 @@ module Wasm =
             let ifElseExpr = expr :?> Ast.IfElseExpression
 
             let exprWasm = expressionToWasmTree ifElseExpr.condition symbols symbolMap
-            //let ifCommand = [| INSTR_IF; getBlockType I32 |]
             let ifCommandWasm = Node(Some [| Values [| INSTR_IF; getBlockType I32 |] |], None)
             let thenBlockWasm = statementToWasmTree ifElseExpr.consequence symbols symbolMap
-            //let elseCommand = [| INSTR_ELSE |]
             let elseCommandWasm = Node(Some [| Values [| INSTR_ELSE |] |], None)
 
             let elseBlockWasm =
@@ -352,7 +350,6 @@ module Wasm =
         | Ast.StatementType.ExpressionStatement ->
             let exprState = state :?> Ast.ExpressionStatement
             let exprTree = expressionToWasmTree exprState.expression symbols symbolMap
-            //let wasmBytes = [| INSTR_DROP |]
             let node = Node(None, Some [| exprTree |])
             node
         | Ast.StatementType.BlockStatement ->

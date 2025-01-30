@@ -4,6 +4,7 @@ module LexerTests =
 
     open System
     open Xunit
+    open Waux.Lang
     open Models
 
     let AssertTokens (lexer: LexerState, expectedToken) =
@@ -233,6 +234,26 @@ module LexerTests =
         let expectedTokens = buildTokenTypes expectedTokensRaw
 
         let input = "if (x) { 42 } elif (x) { 32 } else { 99 }"
+        let lexer = Lexer.createLexer input
+
+        expectedTokens
+        |> List.iter (fun et -> AssertTokens(lexer, et))
+
+    [<Theory>]
+    [<InlineData("==")>]
+    [<InlineData("!=")>]
+    [<InlineData("<")>]
+    [<InlineData("<=")>]
+    [<InlineData(">")>]
+    [<InlineData(">=")>]
+    let ``Can Lex boolean conditionals`` (input : string) =
+        let token = Models.StrToToken input
+        let expectedTokensRaw: (Token * string) list =
+            [ (token, input)
+              (Token.EOF, "") ]
+
+        let expectedTokens = buildTokenTypes expectedTokensRaw
+
         let lexer = Lexer.createLexer input
 
         expectedTokens

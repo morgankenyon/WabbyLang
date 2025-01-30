@@ -4,6 +4,7 @@ type Token =
     //special types
     | ILLEGAL
     | EOF
+    | UNKNOWN
     //identifiers + literals
     | IDENT
     | NUMBER
@@ -13,6 +14,12 @@ type Token =
     | MINUS
     | ASTERISK
     | SLASH
+    | EQ
+    | NOT_EQ
+    | LT
+    | LT_EQ
+    | GT
+    | GT_EQ
     //delimeters
     //| PERIOD
     | COMMA
@@ -28,6 +35,26 @@ type Token =
     | IF
     | ELSE
     | ELIF
+
+let internal TokenToStr (token : Token) = 
+    match token with
+    | EQ -> "=="
+    | NOT_EQ -> "!="
+    | LT -> "<"
+    | LT_EQ -> "<="
+    | GT -> ">"
+    | GT_EQ -> ">="
+    | _ -> ""
+let internal StrToToken (value : string) =
+    match value with
+    | "==" -> EQ
+    | "!=" -> NOT_EQ
+    | "<" -> LT
+    | "<=" -> LT_EQ
+    | ">" -> GT
+    | ">=" -> GT_EQ
+    | _ -> UNKNOWN
+
 
 type TokenPair = { Token: Token; Literal: string }
 

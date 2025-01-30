@@ -19,4 +19,8 @@
     <PackageReference Include="Wasmtime" Version="22.0.0" />
   </ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="Waux.Lang.Test" />
+	</ItemGroup>
+
 </Project>
