@@ -161,7 +161,8 @@ module LexerTests =
     let ``Can Lex assignment`` () =
         let expectedTokens =
             [ { Token = Token.IDENT; Literal = "x" }
-              { Token = Token.ASSIGNMENT; Literal = ":=" }
+              { Token = Token.ASSIGNMENT
+                Literal = ":=" }
               { Token = Token.IDENT; Literal = "x" }
               { Token = Token.PLUS; Literal = "+" }
               { Token = Token.NUMBER; Literal = "3" }
@@ -265,11 +266,9 @@ module LexerTests =
     [<InlineData("and")>]
     [<InlineData("or")>]
     [<InlineData("while")>]
-    let ``Can Lex boolean conditionals`` (input : string) =
+    let ``Can Lex boolean conditionals`` (input: string) =
         let token = Models.StrToToken input
-        let expectedTokensRaw: (Token * string) list =
-            [ (token, input)
-              (Token.EOF, "") ]
+        let expectedTokensRaw: (Token * string) list = [ (token, input); (Token.EOF, "") ]
 
         let expectedTokens = buildTokenTypes expectedTokensRaw
 
@@ -277,18 +276,16 @@ module LexerTests =
 
         expectedTokens
         |> List.iter (fun et -> AssertTokens(lexer, et))
-        
+
     [<InlineData("func")>]
     [<InlineData("let")>]
     [<InlineData("if")>]
     [<InlineData("else")>]
     [<InlineData("elif")>]
     [<InlineData("while")>]
-    let ``Can lex keywords`` (input : string) =
+    let ``Can lex keywords`` (input: string) =
         let token = Models.StrToToken input
-        let expectedTokensRaw: (Token * string) list =
-            [ (token, input)
-              (Token.EOF, "") ]
+        let expectedTokensRaw: (Token * string) list = [ (token, input); (Token.EOF, "") ]
 
         let expectedTokens = buildTokenTypes expectedTokensRaw
 
@@ -296,4 +293,3 @@ module LexerTests =
 
         expectedTokens
         |> List.iter (fun et -> AssertTokens(lexer, et))
-        

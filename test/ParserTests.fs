@@ -395,7 +395,7 @@ module ParserTests =
 
         Assert.Equal(1, modd.statements.Length)
 
-        let str = modd.statements[0].Str()
+        let str = modd.statements[ 0 ].Str()
         Assert.Equal("x := (x + 2);", str)
 
 
@@ -571,7 +571,7 @@ func isZero(x) {
 
         Assert.Equal(1, modd.statements.Length)
 
-        let str = modd.statements[0].Str()
+        let str = modd.statements[ 0 ].Str()
         Assert.Equal(expected, str)
 
     [<Fact>]
@@ -585,5 +585,5 @@ func isZero(x) {
 
         Assert.Equal(1, modd.statements.Length)
 
-        let str = modd.statements[0].Str()
+        let str = modd.statements[ 0 ].Str()
         Assert.Equal("while ((x < n)) { x := (x + 1); }", str)

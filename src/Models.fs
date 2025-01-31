@@ -40,7 +40,7 @@ type Token =
     | ELIF
     | WHILE
 
-let internal TokenToStr (token : Token) = 
+let internal TokenToStr (token: Token) =
     match token with
     | EQ -> "=="
     | NOT_EQ -> "!="
@@ -49,7 +49,8 @@ let internal TokenToStr (token : Token) =
     | GT -> ">"
     | GT_EQ -> ">="
     | _ -> ""
-let internal StrToToken (value : string) =
+
+let internal StrToToken (value: string) =
     match value with
     | "==" -> EQ
     | "!=" -> NOT_EQ

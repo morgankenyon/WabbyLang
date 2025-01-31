@@ -21,12 +21,16 @@ module Wasm =
 
     [<Literal>]
     let INSTR_BLOCK = 2uy
+
     [<Literal>]
     let INSTR_LOOP = 3uy
+
     [<Literal>]
     let INSTR_BR = 12uy
+
     [<Literal>]
     let INSTR_BR_IF = 13uy
+
     [<Literal>]
     let INSTR_IF = 4uy
 
@@ -92,28 +96,40 @@ module Wasm =
 
     [<Literal>]
     let INSTR_i32_EQZ = 69uy
+
     [<Literal>]
     let INSTR_i32_EQ = 70uy
+
     [<Literal>]
     let INSTR_i32_NE = 71uy
+
     [<Literal>]
     let INSTR_i32_LT_S = 72uy
+
     [<Literal>]
     let INSTR_i32_LT_U = 73uy
+
     [<Literal>]
     let INSTR_i32_GT_S = 74uy
+
     [<Literal>]
     let INSTR_i32_GT_U = 75uy
+
     [<Literal>]
     let INSTR_i32_LE_S = 76uy
+
     [<Literal>]
     let INSTR_i32_LE_U = 77uy
+
     [<Literal>]
     let INSTR_i32_GE_S = 78uy
+
     [<Literal>]
     let INSTR_i32_GE_U = 79uy
+
     [<Literal>]
     let INSTR_i32_AND = 113uy
+
     [<Literal>]
     let INSTR_i32_OR = 114uy
 
@@ -382,7 +398,12 @@ module Wasm =
             match symbol with
             | Ok sy ->
                 let expreTree = expressionToWasmTree assignExpr.value symbols symbolMap
-                let wasmBytes = [| INSTR_LOCAL_TEE; i32 sy.index; INSTR_DROP |]
+
+                let wasmBytes =
+                    [| INSTR_LOCAL_TEE
+                       i32 sy.index
+                       INSTR_DROP |]
+
                 let node = Node(Some [| Values wasmBytes |], Some [| expreTree |])
                 node
             | Error msg -> raise (Exception(msg))
@@ -431,12 +452,33 @@ module Wasm =
         | Ast.StatementType.WhileStatement ->
             let whileState = state :?> Ast.WhileStatement
 
-            let loopEntry = Node (Some [| Values [| INSTR_LOOP; getBlockType blockType.Empty_ |] |], None)
+            let loopEntry =
+                Node(
+                    Some [| Values [| INSTR_LOOP
+                                      getBlockType blockType.Empty_ |] |],
+                    None
+                )
+
             let cond = expressionToWasmTree whileState.condition symbols symbolMap
-            let ifEntry = Node (Some [| Values [| INSTR_IF; getBlockType Empty_ |] |], None)
+
+            let ifEntry =
+                Node(
+                    Some [| Values [| INSTR_IF
+                                      getBlockType Empty_ |] |],
+                    None
+                )
+
             let body = statementToWasmTree whileState.body symbols symbolMap
-            let brEntry = Node (Some [| Values [| INSTR_BR; i32 1; INSTR_END; INSTR_END |] |], None)
-            
+
+            let brEntry =
+                Node(
+                    Some [| Values [| INSTR_BR
+                                      i32 1
+                                      INSTR_END
+                                      INSTR_END |] |],
+                    None
+                )
+
             let whileWasm =
                 [| loopEntry
                    cond

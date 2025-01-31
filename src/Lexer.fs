@@ -45,7 +45,7 @@ module Lexer =
         l.readPosition <- l.readPosition + 1
         l.ch <- newChar
 
-    let peekChar(l : LexerState) =
+    let peekChar (l: LexerState) =
         match l.readPosition >= l.input.Length with
         | true -> '\000'
         | false -> l.input.Chars l.readPosition
@@ -109,10 +109,12 @@ module Lexer =
               || l.ch = '\n'
               || l.ch = '\r' do
             readChar l
+
         ()
 
-    let nextTwoCharToken (l: LexerState) (secondChar : char) (matchToken : Token) (nonMatchToken : Token) =
+    let nextTwoCharToken (l: LexerState) (secondChar: char) (matchToken: Token) (nonMatchToken: Token) =
         let nextChar = peekChar l
+
         match nextChar with
         | nc when nc = '=' ->
             let ch = l.ch

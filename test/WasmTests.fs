@@ -383,7 +383,7 @@ func isZero(x) {
     let ``Can test while loop`` () =
         let input = "func countTo(n) { let x = 0; while (x < n) { x := x + 1; } x; }"
 
-        let wasmBytes = EndToEnd.compileModuleAndPrint input true
+        let wasmBytes = EndToEnd.compileModuleAndPrint input false
 
         Assert.True(wasmBytes.Length > 0)
 

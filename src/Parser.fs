@@ -190,6 +190,7 @@ module Parser =
 
     let parseIdentifierOrAssignment p =
         let identStatement = new Ast.Identifier(p.curToken, p.curToken.Literal)
+
         if peekTokenIs p Token.ASSIGNMENT then
             nextToken p
             nextToken p
@@ -197,7 +198,7 @@ module Parser =
             let value = parseExpression p ExprPrecedence.LOWEST
 
             while not (curTokenIs p Token.SEMICOLON)
-                    && not (curTokenIs p Token.EOF) do
+                  && not (curTokenIs p Token.EOF) do
                 nextToken p
 
             if curTokenIs p Token.EOF then
@@ -213,8 +214,7 @@ module Parser =
                     |> toSomeExpr
                 | None -> None
         else
-            identStatement
-            |> toSomeExpr
+            identStatement |> toSomeExpr
 
     let parseInfixExpression p left =
         let curToken = p.curToken
@@ -296,6 +296,7 @@ module Parser =
         let block = new Ast.BlockStatement(curToken, statementArray)
 
         block
+
     and parseWhileStatement p =
         let curToken = p.curToken
 
