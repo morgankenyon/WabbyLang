@@ -24,6 +24,8 @@ module Lexer =
             AND
         else if ident = "or" then
             OR
+        else if ident = "while" then
+            WHILE
         //else if ident = "return" then
         //    RETURN
         //else if ident = "true" then
@@ -135,16 +137,10 @@ module Lexer =
             | '}' -> (Token.RBRACE, l.ch.ToString())
             | ',' -> (Token.COMMA, l.ch.ToString())
             | '=' -> nextTwoCharToken l '=' Token.EQ Token.ASSIGN
-                //let nextChar = peekChar l
-                //match nextChar with
-                //| '=' ->
-                //    let ch = l.ch
-                //    readChar l
-                //    (Token.EQ, ch.ToString() + l.ch.ToString())
-                //| _ -> (Token.ASSIGN, l.ch.ToString())
-            | '!' -> nextTwoCharToken l '=' Token.NOT_EQ Token.UNKNOWN
+            | '!' -> nextTwoCharToken l '=' Token.NOT_EQ Token.ILLEGAL
             | '<' -> nextTwoCharToken l '=' Token.LT_EQ Token.LT
             | '>' -> nextTwoCharToken l '=' Token.GT_EQ Token.GT
+            | ':' -> nextTwoCharToken l '=' Token.ASSIGNMENT Token.ILLEGAL
             | _ -> nextComplexToken l
 
         let token = { Token = tokenType; Literal = literal }

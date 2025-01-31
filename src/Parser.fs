@@ -188,6 +188,34 @@ module Parser =
         new Ast.Identifier(p.curToken, p.curToken.Literal)
         |> toSomeExpr
 
+    let parseIdentifierOrAssignment p =
+        let identStatement = new Ast.Identifier(p.curToken, p.curToken.Literal)
+        if peekTokenIs p Token.ASSIGNMENT then
+            nextToken p
+            nextToken p
+
+            let value = parseExpression p ExprPrecedence.LOWEST
+
+            while not (curTokenIs p Token.SEMICOLON)
+                    && not (curTokenIs p Token.EOF) do
+                nextToken p
+
+            if curTokenIs p Token.EOF then
+                p.errors.Add(
+                    sprintf "Assignment statement identified as \"%s\" needs an ending semicolon" identStatement.value
+                )
+
+                None
+            else
+                match value with
+                | Some v ->
+                    new Ast.AssignmentExpression(identStatement, v)
+                    |> toSomeExpr
+                | None -> None
+        else
+            identStatement
+            |> toSomeExpr
+
     let parseInfixExpression p left =
         let curToken = p.curToken
 
@@ -392,7 +420,7 @@ module Parser =
 
         //register prefix parse functions
         let prefixFns = new System.Collections.Generic.Dictionary<Token, prefixParse>()
-        prefixFns.Add(Token.IDENT, parseIdentifier)
+        prefixFns.Add(Token.IDENT, parseIdentifierOrAssignment)
         prefixFns.Add(Token.NUMBER, parseIntegerLiteral)
         //prefixFns.Add(TokenType.BANG, parsePrefixExpression)
         //prefixFns.Add(TokenType.MINUS, parsePrefixExpression)

@@ -14,6 +14,7 @@ type Token =
     | MINUS
     | ASTERISK
     | SLASH
+    | ASSIGNMENT
     | EQ
     | NOT_EQ
     | LT
@@ -58,6 +59,11 @@ let internal StrToToken (value : string) =
     | ">=" -> GT_EQ
     | "and" -> AND
     | "or" -> OR
+    | "func" -> FUNC
+    | "let" -> LET
+    | "if" -> IF
+    | "else" -> ELSE
+    | "elif" -> ELIF
     | "while" -> WHILE
     | _ -> UNKNOWN
 

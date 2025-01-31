@@ -384,6 +384,23 @@ module ParserTests =
         | Error msg -> Assert.Fail msg
 
     [<Fact>]
+    let ``Can parse assignment statement`` () =
+        let input = "x := x + 2;"
+
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+
+        AssertNoParseErrors parser
+
+        Assert.Equal(1, modd.statements.Length)
+
+        let str = modd.statements[0].Str()
+        Assert.Equal("x := (x + 2);", str)
+
+
+
+    [<Fact>]
     let ``Can parse function statement`` () =
         let input = "func add(x, y) { x + y; }"
 

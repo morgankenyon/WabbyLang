@@ -9,6 +9,7 @@ module Ast =
         | LetStatement
         | BlockStatement
         | FunctionStatement
+        | WhileStatement
 
     type ExpressionType =
         | InfixExpression
@@ -16,6 +17,7 @@ module Ast =
         | Identifier
         | CallExpression
         | IfElseExpression
+        | AssignmentExpression
 
 
     //type AstType =
@@ -151,6 +153,18 @@ module Ast =
             member this.Str() =
                 sprintf "%s %s = %s;" (this.token.Literal) ((this.name :> Expression).Str()) (this.value.Str())
 
+    type AssignmentExpression(name: Identifier, value: Expression) =
+        member this.name = name
+        member this.value = value
+
+        interface Expression with
+            member this.NodeType = NodeType.Expression
+            member this.ExprType() = ExpressionType.AssignmentExpression
+            member this.TokenLiteral() = name.token.Literal
+
+            member this.Str() =
+                sprintf "%s := %s;" (name.token.Literal) (this.value.Str())
+
     type ExpressionStatement(token: TokenPair, expression: Expression) =
         member this.token = token
         member this.expression = expression
@@ -222,6 +236,22 @@ module Ast =
                 match y with
                 | :? IntegerLiteral as y -> x.value.CompareTo(y.value)
                 | _ -> invalidArg "y" "cannot compare values of different types"
+
+    type WhileStatement(token: TokenPair, condition: Expression, body: BlockStatement) =
+        member this.token = token
+        member this.condition = condition
+        member this.body = body
+
+        interface Statement with
+            member this.NodeType = NodeType.Statement
+            member this.TokenLiteral() = this.token.Literal
+            member this.StateType() = StatementType.WhileStatement
+
+            member this.Str() =
+                let conditionStr = this.condition.Str()
+                let bodyStr = (this.body :> Statement).Str()
+
+                sprintf "while (%s) { %s }" conditionStr bodyStr
 
 //type LongLiteral(token: TokenPair, value: int64) =
 //    member this.token = token

@@ -158,6 +158,22 @@ module LexerTests =
         |> List.iter (fun et -> AssertTokens(lexer, et))
 
     [<Fact>]
+    let ``Can Lex assignment`` () =
+        let expectedTokens =
+            [ { Token = Token.IDENT; Literal = "x" }
+              { Token = Token.ASSIGNMENT; Literal = ":=" }
+              { Token = Token.IDENT; Literal = "x" }
+              { Token = Token.PLUS; Literal = "+" }
+              { Token = Token.NUMBER; Literal = "3" }
+              { Token = Token.EOF; Literal = "" } ]
+
+        let input = "x := x + 3"
+        let lexer = Lexer.createLexer input
+
+        expectedTokens
+        |> List.iter (fun et -> AssertTokens(lexer, et))
+
+    [<Fact>]
     let ``Can Lex simple function declarations`` () =
         let expectedTokensRaw: (Token * string) list =
             [ (Token.FUNC, "func")
@@ -261,3 +277,23 @@ module LexerTests =
 
         expectedTokens
         |> List.iter (fun et -> AssertTokens(lexer, et))
+        
+    [<InlineData("func")>]
+    [<InlineData("let")>]
+    [<InlineData("if")>]
+    [<InlineData("else")>]
+    [<InlineData("elif")>]
+    [<InlineData("while")>]
+    let ``Can lex keywords`` (input : string) =
+        let token = Models.StrToToken input
+        let expectedTokensRaw: (Token * string) list =
+            [ (token, input)
+              (Token.EOF, "") ]
+
+        let expectedTokens = buildTokenTypes expectedTokensRaw
+
+        let lexer = Lexer.createLexer input
+
+        expectedTokens
+        |> List.iter (fun et -> AssertTokens(lexer, et))
+        
