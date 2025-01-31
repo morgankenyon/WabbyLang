@@ -20,6 +20,8 @@ type Token =
     | LT_EQ
     | GT
     | GT_EQ
+    | AND
+    | OR
     //delimeters
     //| PERIOD
     | COMMA
@@ -35,6 +37,7 @@ type Token =
     | IF
     | ELSE
     | ELIF
+    | WHILE
 
 let internal TokenToStr (token : Token) = 
     match token with
@@ -53,6 +56,9 @@ let internal StrToToken (value : string) =
     | "<=" -> LT_EQ
     | ">" -> GT
     | ">=" -> GT_EQ
+    | "and" -> AND
+    | "or" -> OR
+    | "while" -> WHILE
     | _ -> UNKNOWN
 
 

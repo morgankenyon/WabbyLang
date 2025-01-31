@@ -27,6 +27,12 @@ module Helpers =
         let func = instance.GetFunction<int32, int32>(funcName)
         func.Invoke(param)
 
+    let runBinaryInt32Expression (funcName: string) (wasmBytes: byte array) (p1: int) (p2: int) =
+        let instance = buildInstance wasmBytes
+
+        let func = instance.GetFunction<int32, int32, int32>(funcName)
+        func.Invoke(p1, p2)
+
 
     let runWithInt32Return (wasmBytes: byte array) = runFuncWithInt32Return "main" wasmBytes
 

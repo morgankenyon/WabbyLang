@@ -20,6 +20,10 @@ module Lexer =
             ELSE
         else if ident = "elif" then
             ELIF
+        else if ident = "and" then
+            AND
+        else if ident = "or" then
+            OR
         //else if ident = "return" then
         //    RETURN
         //else if ident = "true" then

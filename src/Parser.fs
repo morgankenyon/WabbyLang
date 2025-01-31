@@ -5,21 +5,26 @@ module Parser =
 
     type ExprPrecedence =
         | LOWEST = 1
-        | EQUALS = 2
-        | LESSGREATER = 3
-        | SUM = 4
-        | PRODUCT = 5
-        | PREFIX = 6
-        | CALL = 7
-        | INDEX = 8
+        | AND_OR = 2
+        | EQUALS = 3
+        | LESSGREATER = 4
+        | SUM = 5
+        | PRODUCT = 6
+        | PREFIX = 7
+        | CALL = 8
+        | INDEX = 9
 
     let PrecedenceMap =
         Map
             .empty
-            //.Add(Token.EQ, ExprPrecedence.EQUALS)
-            //.Add(TokenType.NOT_EQ, ExprPrecedence.EQUALS)
-            //.Add(TokenType.LT, ExprPrecedence.LESSGREATER)
-            //.Add(TokenType.GT, ExprPrecedence.LESSGREATER)
+            .Add(Token.EQ, ExprPrecedence.EQUALS)
+            .Add(Token.NOT_EQ, ExprPrecedence.EQUALS)
+            .Add(Token.LT, ExprPrecedence.LESSGREATER)
+            .Add(Token.LT_EQ, ExprPrecedence.LESSGREATER)
+            .Add(Token.GT, ExprPrecedence.LESSGREATER)
+            .Add(Token.GT_EQ, ExprPrecedence.LESSGREATER)
+            .Add(Token.AND, ExprPrecedence.AND_OR)
+            .Add(Token.OR, ExprPrecedence.AND_OR)
             .Add(Token.PLUS, ExprPrecedence.SUM)
             .Add(Token.MINUS, ExprPrecedence.SUM)
             .Add(Token.SLASH, ExprPrecedence.PRODUCT)
@@ -406,10 +411,14 @@ module Parser =
         infixFns.Add(Token.MINUS, parseInfixExpression)
         infixFns.Add(Token.SLASH, parseInfixExpression)
         infixFns.Add(Token.ASTERISK, parseInfixExpression)
-        //infixFns.Add(TokenType.EQ, parseInfixExpression)
-        //infixFns.Add(TokenType.NOT_EQ, parseInfixExpression)
-        //infixFns.Add(TokenType.LT, parseInfixExpression)
-        //infixFns.Add(TokenType.GT, parseInfixExpression)
+        infixFns.Add(Token.EQ, parseInfixExpression)
+        infixFns.Add(Token.NOT_EQ, parseInfixExpression)
+        infixFns.Add(Token.LT, parseInfixExpression)
+        infixFns.Add(Token.LT_EQ, parseInfixExpression)
+        infixFns.Add(Token.GT, parseInfixExpression)
+        infixFns.Add(Token.GT_EQ, parseInfixExpression)
+        infixFns.Add(Token.AND, parseInfixExpression)
+        infixFns.Add(Token.OR, parseInfixExpression)
         infixFns.Add(Token.LPAREN, parseCallExpression)
         //infixFns.Add(TokenType.LBRACKET, parseIndexExpression)
 

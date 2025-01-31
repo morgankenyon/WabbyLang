@@ -246,6 +246,9 @@ module LexerTests =
     [<InlineData("<=")>]
     [<InlineData(">")>]
     [<InlineData(">=")>]
+    [<InlineData("and")>]
+    [<InlineData("or")>]
+    [<InlineData("while")>]
     let ``Can Lex boolean conditionals`` (input : string) =
         let token = Models.StrToToken input
         let expectedTokensRaw: (Token * string) list =

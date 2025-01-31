@@ -533,3 +533,26 @@ func isZero(x) {
 
 
         | Error msg -> af msg
+
+    [<Theory>]
+    [<InlineData("2 < 9", "(2 < 9)")>]
+    [<InlineData("2 <= 9", "(2 <= 9)")>]
+    [<InlineData("2 > 9", "(2 > 9)")>]
+    [<InlineData("2 >= 9", "(2 >= 9)")>]
+    [<InlineData("2 == 9", "(2 == 9)")>]
+    [<InlineData("2 != 9", "(2 != 9)")>]
+    [<InlineData("2 and 9", "(2 and 9)")>]
+    [<InlineData("2 or 9", "(2 or 9)")>]
+    [<InlineData("2 < 3 or 9 == 1", "((2 < 3) or (9 == 1))")>]
+    [<InlineData("2 < 3 and 9 == 1", "((2 < 3) and (9 == 1))")>]
+    let ``Can parse boolean expressions`` input expected =
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+
+        AssertNoParseErrors parser
+
+        Assert.Equal(1, modd.statements.Length)
+
+        let str = modd.statements[0].Str()
+        Assert.Equal(expected, str)

@@ -9,10 +9,6 @@ module WasmTests =
     open Wasmtime
     open Helpers
 
-
-    [<Fact>]
-    let ``My test`` () = Assert.True(true)
-
     [<Fact>]
     let ``Can run simple wasm program`` () =
         let engine = new Engine()
@@ -332,3 +328,41 @@ func isZero(x) {
 
         Assert.Equal(1, isZero 0)
         Assert.Equal(0, isZero 1)
+
+    [<Theory>]
+    [<InlineData("a > b", 43, 42, 1)>]
+    [<InlineData("a > b", 42, 43, 0)>]
+    [<InlineData("a > b", 42, 42, 0)>]
+    [<InlineData("a < b", 42, 43, 1)>]
+    [<InlineData("a < b", 43, 42, 0)>]
+    [<InlineData("a < b", 42, 42, 0)>]
+    [<InlineData("a >= b", 43, 42, 1)>]
+    [<InlineData("a >= b", 42, 43, 0)>]
+    [<InlineData("a >= b", 42, 42, 1)>]
+    [<InlineData("a <= b", 42, 43, 1)>]
+    [<InlineData("a <= b", 43, 42, 0)>]
+    [<InlineData("a <= b", 42, 42, 1)>]
+    [<InlineData("a == b", 43, 42, 0)>]
+    [<InlineData("a == b", 42, 43, 0)>]
+    [<InlineData("a == b", 42, 42, 1)>]
+    [<InlineData("a != b", 43, 42, 1)>]
+    [<InlineData("a != b", 42, 43, 1)>]
+    [<InlineData("a != b", 42, 42, 0)>]
+    [<InlineData("a and b", 0, 0, 0)>]
+    [<InlineData("a and b", 1, 0, 0)>]
+    [<InlineData("a and b", 0, 1, 0)>]
+    [<InlineData("a and b", 1, 1, 1)>]
+    [<InlineData("a or b", 0, 0, 0)>]
+    [<InlineData("a or b", 1, 0, 1)>]
+    [<InlineData("a or b", 0, 1, 1)>]
+    [<InlineData("a or b", 1, 1, 1)>]
+    let ``Can test binary comparison operators`` operation p1 p2 expectedResult =
+        let input = $"func main(a, b) {{ {operation} }}"
+
+        let wasmBytes = EndToEnd.compileModuleAndPrint input false
+
+        Assert.True(wasmBytes.Length > 0)
+
+        let result = runBinaryInt32Expression "main" wasmBytes p1 p2
+
+        Assert.Equal(expectedResult, result)

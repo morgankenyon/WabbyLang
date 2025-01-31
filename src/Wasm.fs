@@ -82,6 +82,33 @@ module Wasm =
     [<Literal>]
     let EMPTY = 64uy
 
+    [<Literal>]
+    let INSTR_i32_EQZ = 69uy
+    [<Literal>]
+    let INSTR_i32_EQ = 70uy
+    [<Literal>]
+    let INSTR_i32_NE = 71uy
+    [<Literal>]
+    let INSTR_i32_LT_S = 72uy
+    [<Literal>]
+    let INSTR_i32_LT_U = 73uy
+    [<Literal>]
+    let INSTR_i32_GT_S = 74uy
+    [<Literal>]
+    let INSTR_i32_GT_U = 75uy
+    [<Literal>]
+    let INSTR_i32_LE_S = 76uy
+    [<Literal>]
+    let INSTR_i32_LE_U = 77uy
+    [<Literal>]
+    let INSTR_i32_GE_S = 78uy
+    [<Literal>]
+    let INSTR_i32_GE_U = 79uy
+    [<Literal>]
+    let INSTR_i32_AND = 113uy
+    [<Literal>]
+    let INSTR_i32_OR = 114uy
+
     type WasmValueBytes =
         | Value of byte
         | Values of byte array
@@ -229,10 +256,22 @@ module Wasm =
 
     let getOperator op =
         match op with
+        //arithmetic
         | "+" -> INSTR_i32_ADD
         | "-" -> INSTR_i32_SUB
         | "*" -> INSTR_i32_MUL
         | "/" -> INSTR_i32_DIV_S
+        //comparison
+        | "==" -> INSTR_i32_EQ
+        | "!=" -> INSTR_i32_NE
+        | "<" -> INSTR_i32_LT_S
+        | "<=" -> INSTR_i32_LE_S
+        | ">" -> INSTR_i32_GT_S
+        | ">=" -> INSTR_i32_GE_S
+        //logic
+        | "and" -> INSTR_i32_AND
+        | "or" -> INSTR_i32_OR
+        //extra
         | _ -> INSTR_END
 
     let resolveSymbols (symbolMap: SymbolDict) (name: string) =
