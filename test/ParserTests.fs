@@ -573,3 +573,17 @@ func isZero(x) {
 
         let str = modd.statements[0].Str()
         Assert.Equal(expected, str)
+
+    [<Fact>]
+    let ``Can parse while statement`` () =
+        let input = "while (x < n) { x := x + 1; }"
+        let lexer = Lexer.createLexer input
+        let parser = Parser.createParser lexer
+        let modd = Parser.parseModule parser
+
+        AssertNoParseErrors parser
+
+        Assert.Equal(1, modd.statements.Length)
+
+        let str = modd.statements[0].Str()
+        Assert.Equal("while ((x < n)) { x := (x + 1); }", str)

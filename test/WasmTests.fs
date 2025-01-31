@@ -366,3 +366,27 @@ func isZero(x) {
         let result = runBinaryInt32Expression "main" wasmBytes p1 p2
 
         Assert.Equal(expectedResult, result)
+
+    [<Fact>]
+    let ``Can test assignment functionality`` () =
+        let input = "func main(x) { x := x + 13; x }"
+
+        let wasmBytes = EndToEnd.compileModuleAndPrint input false
+
+        Assert.True(wasmBytes.Length > 0)
+
+        let mainResult = runInt32FuncWithInt32Return "main" wasmBytes 10
+
+        Assert.Equal(23, mainResult)
+
+    [<Fact>]
+    let ``Can test while loop`` () =
+        let input = "func countTo(n) { let x = 0; while (x < n) { x := x + 1; } x; }"
+
+        let wasmBytes = EndToEnd.compileModuleAndPrint input true
+
+        Assert.True(wasmBytes.Length > 0)
+
+        let mainResult = runInt32FuncWithInt32Return "countTo" wasmBytes 10
+
+        Assert.Equal(10, mainResult)

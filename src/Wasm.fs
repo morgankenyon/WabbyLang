@@ -20,6 +20,14 @@ module Wasm =
     let TYPE_FUNCTION = 96uy
 
     [<Literal>]
+    let INSTR_BLOCK = 2uy
+    [<Literal>]
+    let INSTR_LOOP = 3uy
+    [<Literal>]
+    let INSTR_BR = 12uy
+    [<Literal>]
+    let INSTR_BR_IF = 13uy
+    [<Literal>]
     let INSTR_IF = 4uy
 
     [<Literal>]
@@ -367,6 +375,17 @@ module Wasm =
 
             let node = Node(None, Some ifElseWasm)
             node
+        | Ast.ExpressionType.AssignmentExpression ->
+            let assignExpr = expr :?> Ast.AssignmentExpression
+            let symbol = resolveSymbols symbolMap assignExpr.name.value
+
+            match symbol with
+            | Ok sy ->
+                let expreTree = expressionToWasmTree assignExpr.value symbols symbolMap
+                let wasmBytes = [| INSTR_LOCAL_TEE; i32 sy.index; INSTR_DROP |]
+                let node = Node(Some [| Values wasmBytes |], Some [| expreTree |])
+                node
+            | Error msg -> raise (Exception(msg))
         | _ -> Empty
 
     and private statementToWasmTree
@@ -408,6 +427,24 @@ module Wasm =
             let wasmBytes = statementToWasmTree fn.body symbols symbolMap
             let inner = [| wasmBytes |]
             let node = Node(None, Some inner)
+            node
+        | Ast.StatementType.WhileStatement ->
+            let whileState = state :?> Ast.WhileStatement
+
+            let loopEntry = Node (Some [| Values [| INSTR_LOOP; getBlockType blockType.Empty_ |] |], None)
+            let cond = expressionToWasmTree whileState.condition symbols symbolMap
+            let ifEntry = Node (Some [| Values [| INSTR_IF; getBlockType Empty_ |] |], None)
+            let body = statementToWasmTree whileState.body symbols symbolMap
+            let brEntry = Node (Some [| Values [| INSTR_BR; i32 1; INSTR_END; INSTR_END |] |], None)
+            
+            let whileWasm =
+                [| loopEntry
+                   cond
+                   ifEntry
+                   body
+                   brEntry |]
+
+            let node = Node(None, Some whileWasm)
             node
         | _ -> Empty
 

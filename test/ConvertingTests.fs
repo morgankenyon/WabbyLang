@@ -181,3 +181,16 @@ module ConvertingTests =
         let bytes = numbers |> Array.map (fun num -> (byte) num)
         Assert.NotNull bytes
 //Helpers.printWasm bytes
+    [<Fact>]
+    let ``Can convert while loop example to wasm program`` () =
+        let numbers =
+            [|    0;  97; 115; 109;   1;  0;   0;  0; 1;   6;  1; 96;
+   1; 127;   1; 127;   3;  2;   1;  0; 7;  11;  1;  7;
+  99; 111; 117; 110; 116; 84; 111;  0; 0;  10; 33;  1;
+  31;   1;   1; 127;  65;  0;  33;  1; 3;  64; 32;  1;
+  32;   0;  72;   4;  64; 32;   1; 65; 1; 106; 34;  1;
+  26;  12;   1;  11;  11; 32;   1; 11 |]
+
+        let bytes = numbers |> Array.map (fun num -> (byte) num)
+        Assert.NotNull bytes
+        Helpers.printWasm bytes

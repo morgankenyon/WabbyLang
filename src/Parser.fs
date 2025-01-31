@@ -247,6 +247,7 @@ module Parser =
         match p.curToken.Token with
         | Token.FUNC -> parseFuncStatement p
         | Token.LET -> parseLetStatement p
+        | Token.WHILE -> parseWhileStatement p
         //| TokenType.RETURN -> parseReturnStatement p
         | _ -> parseExpressionStatement p
 
@@ -295,6 +296,18 @@ module Parser =
         let block = new Ast.BlockStatement(curToken, statementArray)
 
         block
+    and parseWhileStatement p =
+        let curToken = p.curToken
+
+        nextToken p
+
+        match parseGroupedExpression p with
+        | Some condition ->
+            nextToken p
+            let body = parseBlockStatement p
+            let whileStatement = new Ast.WhileStatement(curToken, condition, body)
+            Some(whileStatement :> Ast.Statement)
+        | None -> None
 
     let parseIfExpression p =
         let curToken = p.curToken
