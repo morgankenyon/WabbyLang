@@ -23,6 +23,7 @@ type Token =
     | GT_EQ
     | AND
     | OR
+    | MODULO
     //delimeters
     //| PERIOD
     | COMMA
@@ -66,6 +67,11 @@ let internal StrToToken (value: string) =
     | "else" -> ELSE
     | "elif" -> ELIF
     | "while" -> WHILE
+    | "+" -> PLUS
+    | "-" -> MINUS
+    | "*" -> ASTERISK
+    | "/" -> SLASH
+    | "%" -> MODULO
     | _ -> UNKNOWN
 
 

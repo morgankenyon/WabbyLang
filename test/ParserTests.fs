@@ -324,6 +324,8 @@ module ParserTests =
     [<InlineData("a * b * c", "((a * b) * c)")>]
     [<InlineData("a * b / c", "((a * b) / c)")>]
     [<InlineData("a + b / c", "(a + (b / c))")>]
+    [<InlineData("a + b % c", "(a + (b % c))")>]
+    [<InlineData("(a + b) % c", "((a + b) % c)")>]
     [<InlineData("a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)")>]
     let ``Can test operator precedence`` input expected =
         let lexer = Lexer.createLexer input

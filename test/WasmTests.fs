@@ -374,6 +374,24 @@ func main() {
 
         Assert.Equal(expectedResult, result)
 
+    [<Theory>]
+    [<InlineData("a + b", 10, 10, 20)>]
+    [<InlineData("a - b", 10, 5, 5)>]
+    [<InlineData("a * b", 5, 3, 15)>]
+    [<InlineData("a / b", 10, 2, 5)>]
+    [<InlineData("a / b", 10, 3, 3)>]
+    [<InlineData("a % b", 10, 3, 1)>]
+    let ``Can test binary arithmetic operators`` operation p1 p2 expectedResult =
+        let input = $"func calc(a, b) {{ {operation} }} func main() {{ calc({p1}, {p2}); }}"
+
+        let wasmBytes = EndToEnd.compileModuleAndPrint input true
+
+        Assert.True(wasmBytes.Length > 0)
+
+        let result = runWithInt32Return wasmBytes
+
+        Assert.Equal(expectedResult, result)
+
     [<Fact>]
     let ``Can test assignment functionality`` () =
         let input = "func main() { let x = 10; x := x + 13; x }"

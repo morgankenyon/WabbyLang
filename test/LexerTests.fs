@@ -278,6 +278,23 @@ module LexerTests =
         |> List.iter (fun et -> AssertTokens(lexer, et))
 
     [<Theory>]
+    [<InlineData("+")>]
+    [<InlineData("-")>]
+    [<InlineData("*")>]
+    [<InlineData("/")>]
+    [<InlineData("%")>]
+    let ``Can Lex arithmetic operators`` (input: string) =
+        let token = Models.StrToToken input
+        let expectedTokensRaw: (Token * string) list = [ (token, input); (Token.EOF, "") ]
+
+        let expectedTokens = buildTokenTypes expectedTokensRaw
+
+        let lexer = Lexer.createLexer input
+
+        expectedTokens
+        |> List.iter (fun et -> AssertTokens(lexer, et))
+
+    [<Theory>]
     [<InlineData("func")>]
     [<InlineData("let")>]
     [<InlineData("if")>]

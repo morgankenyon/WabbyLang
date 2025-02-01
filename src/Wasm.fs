@@ -56,6 +56,9 @@ module Wasm =
     let INSTR_i32_DIV_S = 109uy
 
     [<Literal>]
+    let INSTR_i32_MOD_S = 111uy
+
+    [<Literal>]
     let i64_VAL_TYPE = 126uy
 
     [<Literal>]
@@ -277,6 +280,7 @@ module Wasm =
         | "-" -> INSTR_i32_SUB
         | "*" -> INSTR_i32_MUL
         | "/" -> INSTR_i32_DIV_S
+        | "%" -> INSTR_i32_MOD_S
         //comparison
         | "==" -> INSTR_i32_EQ
         | "!=" -> INSTR_i32_NE
