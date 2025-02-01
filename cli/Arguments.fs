@@ -14,6 +14,7 @@ module Arguments =
             member this.Usage =
                 match this with
                 | Filename _ -> "The .waux file to compile"
+
     type RunArgs =
         | [<MainCommand>] Filename of file: string
         interface IArgParserTemplate with

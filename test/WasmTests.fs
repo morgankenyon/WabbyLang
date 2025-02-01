@@ -236,7 +236,7 @@ module WasmTests =
     [<Fact>]
     let ``Can test building symbol table`` () =
         let input = "func add(x, y) { let sum = x + y; sum; }"
-        let symbolTable = EndToEnd.compileToBuildSymbolMap2 input
+        let symbolTable = EndToEnd.compileToBuildSymbolMap input
 
         Assert.NotNull(symbolTable)
         Assert.Equal(1, symbolTable.Count)
@@ -259,7 +259,7 @@ module WasmTests =
         let input =
             "func first() { second(1,2); } func second(x, y) { third(x, y); } func third(w,z) { w + z; }"
 
-        let symbolTable = EndToEnd.compileToBuildSymbolMap2 input
+        let symbolTable = EndToEnd.compileToBuildSymbolMap input
 
         Assert.NotNull(symbolTable)
         Assert.Equal(1, symbolTable.Count)

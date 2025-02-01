@@ -133,14 +133,6 @@ module Wasm =
     [<Literal>]
     let INSTR_i32_OR = 114uy
 
-    type WasmValueBytes =
-        | Value of byte
-        | Values of byte array
-
-    type WasmTree =
-        | Empty
-        | Node of value: WasmValueBytes array option * inners: WasmTree array option
-
     type WasmFuncBytes =
         { name: string
           paramTypes: byte array
@@ -307,32 +299,29 @@ module Wasm =
             Ok symbol
         | false -> Error $"Error: undeclared identifier: {name}"
 
-    let rec private expressionToWasmTree
+    let rec private expressionToWasm
         (expr: Ast.Expression)
         (symbols: NestedSymbolDict)
         (symbolMap: SymbolDict)
-        : WasmTree =
+        : byte array =
         match expr.ExprType() with
         | Ast.ExpressionType.IntegerLiteral ->
             let integerLiteral = expr :?> Ast.IntegerLiteral
             let value = i32 integerLiteral.value
             let wasmBytes = [| INSTR_i32_CONST; value |]
-            let node = Node(Some [| Values wasmBytes |], None)
-            node
+            wasmBytes
         | Ast.ExpressionType.InfixExpression ->
             let infixExpression = expr :?> Ast.InfixExpression
-            let leftValue = expressionToWasmTree infixExpression.left symbols symbolMap
-            let operator = getOperator infixExpression.operator
-            let operatorValue = Node(Some [| Value operator |], None)
-            let rightValue = expressionToWasmTree infixExpression.right symbols symbolMap
+            let leftWasm = expressionToWasm infixExpression.left symbols symbolMap
+            let operatorWasm = [| getOperator infixExpression.operator |]
+            let rightWasm = expressionToWasm infixExpression.right symbols symbolMap
 
-            let inner =
-                [| leftValue
-                   rightValue
-                   operatorValue |]
+            let wasmBytes =
+                Array.concat [ leftWasm
+                               rightWasm
+                               operatorWasm ]
 
-            let node = Node(None, Some inner)
-            node
+            wasmBytes
         | Ast.ExpressionType.Identifier ->
             let iden = expr :?> Ast.Identifier
 
@@ -341,8 +330,7 @@ module Wasm =
             match symbol with
             | Ok sy ->
                 let wasmBytes = [| INSTR_LOCAL_GET; i32 sy.index |]
-                let node = Node(Some [| Values wasmBytes |], None)
-                node
+                wasmBytes
             | Error msg -> raise (Exception(msg))
         | Ast.ExpressionType.CallExpression ->
             let callExpr = expr :?> Ast.CallExpression
@@ -356,64 +344,60 @@ module Wasm =
                 else
                     raise (new Exception("Cannot find function name in symbols table"))
 
-            let mutable arguTrees: WasmTree array = [||]
+            let mutable arguBytes: byte array = [||]
 
             for args in callExpr.arguments do
-                let argTree = expressionToWasmTree args symbols symbolMap
+                let argTree = expressionToWasm args symbols symbolMap
 
-                arguTrees <-
-                    Array.concat [ arguTrees
-                                   [| argTree |] ]
+                arguBytes <- Array.concat [ arguBytes; argTree ]
 
-            let wasmBytes = [| INSTR_CALL; i32 index |]
-            let node = Node(Some [| Values wasmBytes |], Some arguTrees)
-            node
+            let valueBytes = [| INSTR_CALL; i32 index |]
+            let wasmBytes = Array.concat [ arguBytes; valueBytes ]
+            wasmBytes
         | Ast.ExpressionType.IfElseExpression ->
             let ifElseExpr = expr :?> Ast.IfElseExpression
 
-            let exprWasm = expressionToWasmTree ifElseExpr.condition symbols symbolMap
-            let ifCommandWasm = Node(Some [| Values [| INSTR_IF; getBlockType I32 |] |], None)
-            let thenBlockWasm = statementToWasmTree ifElseExpr.consequence symbols symbolMap
-            let elseCommandWasm = Node(Some [| Values [| INSTR_ELSE |] |], None)
+            let exprWasm = expressionToWasm ifElseExpr.condition symbols symbolMap
+            let ifCommandWasm = [| INSTR_IF; getBlockType I32 |]
+            let thenBlockWasm = statementToWasm ifElseExpr.consequence symbols symbolMap
+            let elseCommandWasm = [| INSTR_ELSE |]
 
-            let elseBlockWasm =
-                statementToWasmTree ifElseExpr.alternative.Value symbols symbolMap
+            let elseBlockWasm = statementToWasm ifElseExpr.alternative.Value symbols symbolMap
 
-            let endingWasm = Node(Some [| Values [| INSTR_END |] |], None)
+            let endingWasm = [| INSTR_END |]
 
-            let ifElseWasm =
-                [| exprWasm
-                   ifCommandWasm
-                   thenBlockWasm
-                   elseCommandWasm
-                   elseBlockWasm
-                   endingWasm |]
+            let wasmBytes =
+                Array.concat [ exprWasm
+                               ifCommandWasm
+                               thenBlockWasm
+                               elseCommandWasm
+                               elseBlockWasm
+                               endingWasm ]
 
-            let node = Node(None, Some ifElseWasm)
-            node
+            wasmBytes
         | Ast.ExpressionType.AssignmentExpression ->
             let assignExpr = expr :?> Ast.AssignmentExpression
             let symbol = resolveSymbols symbolMap assignExpr.name.value
 
             match symbol with
             | Ok sy ->
-                let expreTree = expressionToWasmTree assignExpr.value symbols symbolMap
+                let exprBytes = expressionToWasm assignExpr.value symbols symbolMap
 
-                let wasmBytes =
+                let valueBytes =
                     [| INSTR_LOCAL_TEE
                        i32 sy.index
                        INSTR_DROP |]
 
-                let node = Node(Some [| Values wasmBytes |], Some [| expreTree |])
-                node
+                let wasmBytes = Array.concat [ exprBytes; valueBytes ]
+                wasmBytes
             | Error msg -> raise (Exception(msg))
-        | _ -> Empty
+        | _ -> [||]
 
-    and private statementToWasmTree
+    and private statementToWasm
         (state: Ast.Statement)
         (symbols: NestedSymbolDict)
         (symbolMap: SymbolDict)
-        : WasmTree =
+        : byte array =
         match state.StateType() with
         | Ast.StatementType.LetStatement ->
             let letState = state :?> Ast.LetStatement
@@ -421,113 +405,57 @@ module Wasm =
 
             match symbol with
             | Ok sy ->
-                let expreTree = expressionToWasmTree letState.value symbols symbolMap
-                let wasmBytes = [| INSTR_LOCAL_SET; i32 sy.index |]
-                let node = Node(Some [| Values wasmBytes |], Some [| expreTree |])
-                node
+                let innerBytes = expressionToWasm letState.value symbols symbolMap
+                let valueBytes = [| INSTR_LOCAL_SET; i32 sy.index |]
+                let wasmBytes = Array.concat [ innerBytes; valueBytes ]
+                wasmBytes
             | Error msg -> raise (Exception(msg))
         | Ast.StatementType.ExpressionStatement ->
             let exprState = state :?> Ast.ExpressionStatement
-            let exprTree = expressionToWasmTree exprState.expression symbols symbolMap
-            let node = Node(None, Some [| exprTree |])
-            node
+            let wasmBytes = expressionToWasm exprState.expression symbols symbolMap
+            wasmBytes
         | Ast.StatementType.BlockStatement ->
             let blockState = state :?> Ast.BlockStatement
-            let mutable innerTrees: WasmTree array = [||]
+            let mutable wasmBytes: byte array = [||]
 
             for state in blockState.statements do
-                innerTrees <-
-                    Array.concat [ innerTrees
-                                   [| statementToWasmTree state symbols symbolMap |] ]
+                wasmBytes <-
+                    Array.concat [ wasmBytes
+                                   statementToWasm state symbols symbolMap ]
 
-            let node = Node(None, Some innerTrees)
-            node
+            wasmBytes
         | Ast.StatementType.FunctionStatement ->
             let fn = state :?> Ast.FunctionStatement
 
-            let wasmBytes = statementToWasmTree fn.body symbols symbolMap
-            let inner = [| wasmBytes |]
-            let node = Node(None, Some inner)
-            node
+            let wasmBytes = statementToWasm fn.body symbols symbolMap
+            wasmBytes
         | Ast.StatementType.WhileStatement ->
             let whileState = state :?> Ast.WhileStatement
 
-            let loopEntry =
-                Node(
-                    Some [| Values [| INSTR_LOOP
-                                      getBlockType blockType.Empty_ |] |],
-                    None
-                )
+            let loopBytes =
+                [| INSTR_LOOP
+                   getBlockType blockType.Empty_ |]
 
-            let cond = expressionToWasmTree whileState.condition symbols symbolMap
+            let condBytes = expressionToWasm whileState.condition symbols symbolMap
 
-            let ifEntry =
-                Node(
-                    Some [| Values [| INSTR_IF
-                                      getBlockType Empty_ |] |],
-                    None
-                )
+            let ifBytes = [| INSTR_IF; getBlockType Empty_ |]
 
-            let body = statementToWasmTree whileState.body symbols symbolMap
+            let bodyBytes = statementToWasm whileState.body symbols symbolMap
 
-            let brEntry =
-                Node(
-                    Some [| Values [| INSTR_BR
-                                      i32 1
-                                      INSTR_END
-                                      INSTR_END |] |],
-                    None
-                )
+            let brBytes =
+                [| INSTR_BR
+                   i32 1
+                   INSTR_END
+                   INSTR_END |]
 
-            let whileWasm =
-                [| loopEntry
-                   cond
-                   ifEntry
-                   body
-                   brEntry |]
+            let wasmBytes =
+                Array.concat [ loopBytes
+                               condBytes
+                               ifBytes
+                               bodyBytes
+                               brBytes ]
 
-            let node = Node(None, Some whileWasm)
-            node
-        | _ -> Empty
-
-    let private generateBytes (bytes: byte array) (v: WasmValueBytes) =
-        match v with
-        | Value vv -> Array.concat [ bytes; [| vv |] ]
-        | Values vvs -> Array.concat [ bytes; vvs ]
-
-    let rec private wasmTreeToBytes (tree: WasmTree) : byte array =
-        match tree with
-        | Empty -> [||]
-        | Node (value, inners) when value.IsSome && inners.IsNone ->
-            let vals = value.Value
-            let mutable bytes: byte array = [||]
-
-            for v in vals do
-                bytes <- generateBytes bytes v
-
-            bytes
-        | Node (value, inners) when value.IsNone && inners.IsSome ->
-            let inn = inners.Value
-            let mutable bytes: byte array = [||]
-
-            for v in inn do
-                let innerBytes = wasmTreeToBytes v
-                bytes <- Array.concat [ bytes; innerBytes ]
-
-            bytes
-        | Node (value, inners) when value.IsSome && inners.IsSome ->
-            let vals = value.Value
-            let inn = inners.Value
-            let mutable bytes: byte array = [||]
-
-            for i in inn do
-                let innerBytes = wasmTreeToBytes i
-                bytes <- Array.concat [ bytes; innerBytes ]
-
-            for v in vals do
-                bytes <- generateBytes bytes v
-
-            bytes
+            wasmBytes
         | _ -> [||]
 
     let rec buildSymbolTable (statement: Ast.Statement) (scopes: SymbolScope) =
@@ -548,7 +476,6 @@ module Wasm =
             match last with
             | Nested (inner) -> inner.Add(name, (locals, inner.Count))
             | Locals _ -> raise (new Exception("Should have been a nested entry here instead of locals"))
-
 
             scopes.AddLast(Locals locals) |> ignore
 
@@ -640,9 +567,7 @@ module Wasm =
                 |> Array.filter (fun se -> se.symbolType = SymbolType.Local)
                 |> Array.length
 
-            let bodyWasm =
-                statementToWasmTree funcState symbols funcSymbols
-                |> wasmTreeToBytes
+            let bodyWasm = statementToWasm funcState symbols funcSymbols
 
             let functionDecls: WasmFuncBytes array =
                 [| { name = name
