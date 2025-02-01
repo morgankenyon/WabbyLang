@@ -32,7 +32,7 @@ module EndToEndTests =
     let ``Can build SymbolMap with nested function definition`` () =
         let input = "func doIt() { add(1,2); } func add(x, y) { x + y; }"
 
-        let symbolScope = EndToEnd.compileToBuildSymbolMap2 input
+        let symbolScope = EndToEnd.compileToBuildSymbolMap input
 
         Assert.Equal(1, symbolScope.Count)
 

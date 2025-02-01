@@ -13,7 +13,7 @@ module EndToEnd =
         System.IO.File.WriteAllBytes("./atest.wasm", bytes)
         bytes
 
-    let compileToBuildSymbolMap2 (input: string) =
+    let compileToBuildSymbolMap (input: string) =
         let lexer = Lexer.createLexer input
         let parser = Parser.createParser lexer
         let modd = Parser.parseModule parser
