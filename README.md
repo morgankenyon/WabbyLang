@@ -6,12 +6,13 @@ This is currently an experimental language/compiler targeting WASM as it's runti
 
 Should I use this? Probably not.
 
+This is currently alpha software. You'll run into bugs and issues, potentially for no unexplained reason. Here be dragons.
+
 Why Waux? What does that word mean? How do you pronounce it?
   * Pronounced like the English work "walk" [1](https://www.collinsdictionary.com/us/dictionary/english/wauk)
   * "A Scots word for wake"
   * Why Waux?
-    * Overall, I just needed to call it something.
-    * But wanted something starting with Wa- to match Wasm, and it wasn't that bad of a word. 
+    * I googled "words that start with wa" and I liked this one the best.
 
 ## Installing as Nuget Tool
 
@@ -19,7 +20,8 @@ The fastest way to get started is to install via nuget tool.
 
 * Install a flavor of .NET 8 from [microsoft](https://dotnet.microsoft.com/en-us/download)
 * Run the following command: `dotnet tool install --global Waux.Lang.Cli`
-* You now have access to the `waux` cli prompt
+  * To update if already installed: `dotnet tool update -g Waux.Lang.Cli`
+* You now have access to the `waux` cli tool
 
 ## Running
 
@@ -33,9 +35,19 @@ How to compile and use.
 * Run `waux run <.wasm file>` to run the generated wasm
   * Can also run in any other wasm compliant runtime.
 
-## Current Examples
+## Language Overview
 
-Currently I have basic mathematical operations and function calling working. For the examples below, I'm converting the compiled wasm to wat for visual purposes. But the output of the compiler is wasm byte code.
+> Please see the [examples](./examples/waux/) folder for valid programs
+
+Waux currently supports the following language concepts:
+* Functions
+* While loops
+* If/else blocks
+* Most boolean comparisons
+* Most integer operations
+  * Only supports int32 values at the moment
+  * Support operator precedence
+
 
 ### Adding
 
