@@ -9,7 +9,7 @@
 	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
 	  <PackageId>Waux.Lang.Cli</PackageId>
 	  <Title>Waux.Lang.Cli</Title>
-	  <Version>0.0.1</Version>
+	  <Version>0.0.2</Version>
 	  <Authors>Morgan Kenyon</Authors>
 	  <Description>A Cli for compiling and running WauxLang files.</Description>
 	  <Summary>A Cli for compiling and running WauxLang files.</Summary>

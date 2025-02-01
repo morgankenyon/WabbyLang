@@ -1,10 +1,10 @@
-func main() { 
-  add(1,2); 
+func multi(z, v) {
+  z * v; 
 }
 func add(x, y) {
   let mul = multi(x, y);
   mul + x + y;
-} 
-func multi(z, v) {
-  z * v; 
+}
+func main() { 
+  add(1,2); 
 }

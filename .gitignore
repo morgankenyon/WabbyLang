@@ -40,3 +40,6 @@ tinroll.api/tin.db
 # React Frontend
 node_modules/
 .fake
+
+# Wasm example files
+examples/waux/*.wasm

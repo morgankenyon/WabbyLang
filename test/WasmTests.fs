@@ -424,3 +424,23 @@ func main() {
             Assert.Throws<Exception>(fun () -> EndToEnd.compileModuleAndPrint input false :> obj)
 
         Assert.Equal("Waux requires a zero parameter 'main' function to exist", excep.Message)
+
+    [<Fact>]
+    let ``Can ensure if/else statment works as expected``() =
+        let input = """
+func main() { 
+  let p = 10;
+  let result = if (p > 20) {
+    1
+  } else {
+    0
+  };
+  result
+}"""
+        let wasmBytes = EndToEnd.compileModuleDebug input
+
+        Assert.True(wasmBytes.Length > 0)
+
+        let mainResult = runWithInt32Return wasmBytes
+
+        Assert.Equal(0, mainResult)

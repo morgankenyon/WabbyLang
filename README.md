@@ -29,8 +29,8 @@ How to compile and use.
 
 * Write a valid `.waux` program
   * See [examples](./examples/waux/) to get started
-  * Right now, every waux file needs a parameterless method named `main` that returns an int32 variable.
-  * This will be relaxed in the future
+  * Every waux file requires a 0 parameter `main` function
+  * All code must be in a single `.waux` file, waux does not currently support importing across files.
 * Run `waux compile <.waux file>` to generate a wasm file
 * Run `waux run <.wasm file>` to run the generated wasm
   * Can also run in any other wasm compliant runtime.
@@ -52,116 +52,112 @@ Waux currently supports the following language concepts:
 
 Right now, waux only supports int32 operations. Any other number types will lead to undefined behavior.
 
-### Adding
+### Simple main function
 
+Lets start with the simpliest program.
 ```
-5 + 2
-```
-
-Compiles into:
-
-```wat
-(module
-  (type $t0 (func (result i32)))
-  (func $main (export "main") (type $t0) (result i32)
-    (i32.add
-      (i32.const 5)
-      (i32.const 2))))
+func main() {
+    10
+}
 ```
 
-### Subtraction
+A main function that returns a hard coded value.
 
-`10 - 2`
+### Variables
 
-Compiles into:
-
-```wat
-(module
-  (type $t0 (func (result i32)))
-  (func $main (export "main") (type $t0) (result i32)
-    (i32.sub
-      (i32.const 10)
-      (i32.const 2))))
-```
-
-### Operator Precedence
-
-It also currently handles operator precedence:
-
-`10 + 10 / 5 * 2 - 1`
-
-Compiles into:
-
-```wat
-(module
-  (type $t0 (func (result i32)))
-  (func $main (export "main") (type $t0) (result i32)
-    (i32.sub
-      (i32.add
-        (i32.const 10)
-        (i32.mul
-          (i32.div_s
-            (i32.const 10)
-            (i32.const 5))
-          (i32.const 2)))
-      (i32.const 1))))
-```
-
-### Variable Assignments
-
-`let x = 42; x`
-
-```wat
-(module
-  (type $t0 (func (result i32)))
-  (func $main (export "main") (type $t0) (result i32)
-    (local $l0 i32)
-    (local.set $l0
-      (i32.const 42))
-    (local.get $l0)))
+You can declare and define a variable to hold values using the `let` binding.
 
 ```
+func main() {
+    let val = 23;
+    val
+}
+```
 
-### Function Calls
+Once a variable has been declared, you change change the value bu using the ':=' binding.
+
+```
+func main() {
+    let val = 23;
+    val := val - 11;
+    val
+}
+```
+
+Currently variables and function names can be made of the following values:
+* Alpha characters: [a-zA-Z]
+* Digit characters: [0-9]
+* Underscore: [_]
+* CombinedRegex: [a-zA-Z_0-9]+
+
+> semicolons separate expressions, the last semicolon is unneeded to indicate a return type
+
+### Mathematical Expressions
+
+You can create more complicated mathematical expressions.
+
+```
+func main() {
+    let a = 5;
+    let b = 10;
+    a * 2 + b
+}
+```
+
+and another
+
+```
+func main() {
+    let a = 5;
+    let b = 10;
+    a * (2 + b)
+}
+```
+
+Status:
+* All four primary mathematical operations (+, -, *, /)
+* Operator precedence (* before +, etc)
+* Use of parentheses to denotate precedence
+
+### If/Else Expressions
+
+You can also add if/else expressions in waux:
 
 ```
 func main() { 
-  add(1,2); 
-}
-func add(x, y) {
-  let mul = multi(x, y);
-  mul + x + y;
-} 
-func multi(z, v) {
-  z * v; 
+    let p = 10;
+    let result = if (p > 20) {
+        10
+    } else {
+        0
+    };
+    result
 }
 ```
 
-```wat
-(module
-  (type $t0 (func (result i32)))
-  (type $t1 (func (param i32 i32) (result i32)))
-  (type $t2 (func (param i32 i32) (result i32)))
-  (func $main (export "main") (type $t0) (result i32)
-    (call $add
-      (i32.const 1)
-      (i32.const 2)))
-  (func $add (export "add") (type $t1) (param $p0 i32) (param $p1 i32) (result i32)
-    (local $l2 i32)
-    (local.set $l2
-      (call $multi
-        (local.get $p0)
-        (local.get $p1)))
-    (i32.add
-      (i32.add
-        (local.get $l2)
-        (local.get $p0))
-      (local.get $p1)))
-  (func $multi (export "multi") (type $t2) (param $p0 i32) (param $p1 i32) (result i32)
-    (i32.mul
-      (local.get $p0)
-      (local.get $p1))))
+Status:
+* Currently `else if` statement is not supported
+* Right now the `else` is optional, but will be changing in a future release
+
+### While Loops
+
+You can leverage a while loop like below.
 ```
+func countTo(n) {
+    let x = 0; 
+    while (x < n) {
+        x := x + 1; 
+    }
+    x;
+}
+
+func main() {
+    countTo(10)
+}
+```
+
+Status:
+* No `break` or `continue` keywords are currently supported
 
 ## Code Formatting
 
