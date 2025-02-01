@@ -104,12 +104,14 @@ module Ast =
 
             member this.Str() =
                 let paraStr =
-                    this.parameters
-                    |> Array.map (fun s -> (s :> Expression).Str())
-                    |> Array.reduce (fun a b -> sprintf "%s, %s" a b)
+                    if this.parameters.Length > 0 then
+                        this.parameters
+                        |> Array.map (fun s -> (s :> Expression).Str())
+                        |> Array.reduce (fun a b -> sprintf "%s, %s" a b)
+                    else ""
 
                 let bodyStr = (this.body :> Statement).Str()
-                sprintf "%s (%s) %s" this.token.Literal paraStr bodyStr
+                sprintf "%s %s(%s) { %s }" this.token.Literal this.name.value paraStr bodyStr
 
     type IfElseExpression
         (
@@ -132,12 +134,12 @@ module Ast =
                 let ifStr = this.condition.Str()
                 let consequenceStr = (this.consequence :> Statement).Str()
 
-                let firstStr = sprintf "if%s %s" ifStr consequenceStr
+                let firstStr = sprintf "if %s { %s }" ifStr consequenceStr
 
                 match this.alternative with
                 | Some alt ->
                     let altStr = (alt :> Statement).Str()
-                    sprintf "%selse %s" firstStr altStr
+                    sprintf "%s else { %s }" firstStr altStr
                 | None -> firstStr
 
     type LetStatement(token: TokenPair, name: Identifier, value: Expression) =

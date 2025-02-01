@@ -1,0 +1,9 @@
+func main() { 
+  let p = 10;
+  let result = if (p > 20) {
+    10
+  } else {
+    0
+  };
+  result
+}

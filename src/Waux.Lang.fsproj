@@ -5,7 +5,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 	  <PackageId>Waux.Lang</PackageId>
 	  <Title>Waux.Lang</Title>
-	  <Version>0.0.1</Version>
+	  <Version>0.0.2</Version>
 	  <Authors>Morgan Kenyon</Authors>
 	  <Description>A new programming languages that compiles to wasm.</Description>
 	  <Summary>A new programming languages that compiles to wasm.</Summary>
