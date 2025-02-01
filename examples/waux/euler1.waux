@@ -1,3 +1,15 @@
 func main() {
-    
+    let count = 0;
+    let n = 1;
+    let num = 0;
+    while (n <= 10) {
+        num := if (n % 3) {
+            n
+        } else {
+            0
+        };
+        count := count + num;
+        n := n + 1
+    };
+    count
 }
