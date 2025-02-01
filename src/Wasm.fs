@@ -475,7 +475,6 @@ module Wasm =
             | _ -> ()
         | _ -> ()
 
-
     let rec buildSymbolTable (statement: Ast.Statement) (scopes: SymbolScope) =
         match statement.StateType() with
         | Ast.StatementType.Module ->
@@ -636,8 +635,30 @@ module Wasm =
 
         bytes
 
+    let confirmMainFunction (symbolScope: SymbolScope) =
+        let mainName = "main"
+        match symbolScope.First.Value with
+        | Nested inner ->
+            if inner.ContainsKey mainName
+            then
+                let (symbolDict, _) = inner[mainName]
+                let paramCount = 
+                    symbolDict.Values
+                    |> Seq.where (fun st -> st.symbolType = SymbolType.Param)
+                    |> Seq.length
+                if paramCount = 0
+                then
+                    ()
+                else
+                    raise (new Exception("Waux requires a zero parameter 'main' function to exist"))
+            else
+                raise (new Exception("Waux requires a zero parameter 'main' function to exist"))
+        | Locals locals -> raise (new Exception("Should not be locals"))
+            
+
     let compile (codeModule: Ast.Module) =
         let symbolScope = buildSymbolMap codeModule
+        confirmMainFunction symbolScope
 
         let symbols =
             match symbolScope.First.Value with
