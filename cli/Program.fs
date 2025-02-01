@@ -19,7 +19,9 @@ module Program =
             ArgumentParser.Create<CmdArgs>(programName = "waux", errorHandler = errorHandler)
 
         match parser.ParseCommandLine argv with
-        | p when p.Contains(Print) -> runPrint (p.GetResult(Print))
+        | r when r.Contains(Run) ->
+            let rr = r.GetResult(Run)
+            run rr
         | c when c.Contains(Compile) ->
             let cc = c.GetResult(Compile)
             compile cc

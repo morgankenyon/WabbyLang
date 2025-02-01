@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Argu" Version="6.2.5" />
+    <PackageReference Include="Wasmtime" Version="22.0.0" />
   </ItemGroup>
 
   <ItemGroup>
