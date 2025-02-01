@@ -2,13 +2,9 @@
 
 WauxLang - A language that compiles to WASM bytecode.
 
-This is currently an experimental language/compiler targeting WASM as it's runtime.
+This is currently an experimental language/compiler targeting WASM as it's runtime. Compiler is written in F#.
 
-Compiler is written in F#.
-
-Current goal: get a simple language compiling and running in WASM
-
-Should I use this? No.
+Should I use this? Probably not.
 
 Why Waux? What does that word mean? How do you pronounce it?
   * Pronounced like the English work "walk" [1](https://www.collinsdictionary.com/us/dictionary/english/wauk)
@@ -17,13 +13,25 @@ Why Waux? What does that word mean? How do you pronounce it?
     * Overall, I just needed to call it something.
     * But wanted something starting with Wa- to match Wasm, and it wasn't that bad of a word. 
 
-## Installing from Source
+## Installing as Nuget Tool
 
-TBD
+The fastest way to get started is to install via nuget tool.
+
+* Install a flavor of .NET 8 from [microsoft](https://dotnet.microsoft.com/en-us/download)
+* Run the following command: `dotnet tool install --global Waux.Lang.Cli`
+* You now have access to the `waux` cli prompt
 
 ## Running
 
-TBD
+How to compile and use.
+
+* Write a valid `.waux` program
+  * See [examples](./examples/waux/) to get started
+  * Right now, every waux file needs a parameterless method named `main` that returns an int32 variable.
+  * This will be relaxed in the future
+* Run `waux compile <.waux file>` to generate a wasm file
+* Run `waux run <.wasm file>` to run the generated wasm
+  * Can also run in any other wasm compliant runtime.
 
 ## Current Examples
 

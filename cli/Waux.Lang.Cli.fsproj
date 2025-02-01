@@ -6,7 +6,6 @@
 	  
 	  <PackAsTool>true</PackAsTool>
 	  <ToolCommandName>waux</ToolCommandName>
-	  <PackageOutputPath>./nupkg</PackageOutputPath>
 	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
 	  <PackageId>Waux.Lang.Cli</PackageId>
 	  <Title>Waux.Lang.Cli</Title>
