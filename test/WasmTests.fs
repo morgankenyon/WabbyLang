@@ -257,7 +257,7 @@ module WasmTests =
     [<Fact>]
     let ``Can test building symbol table of triple nested function`` () =
         let input =
-            "func first() { second(1,2); } func second(x, y) { third(x, y); } func third(w,z) { w + z; }"
+            "func third(w,z) { w + z; } func second(x, y) { third(x, y); } func first() { second(1,2); }"
 
         let symbolTable = EndToEnd.compileToBuildSymbolMap input
 
@@ -273,7 +273,7 @@ module WasmTests =
             Assert.True(nested.ContainsKey("first"))
             let (firstEntries, firstIndex) = nested["first"]
             Assert.Equal(0, firstEntries.Count)
-            Assert.Equal(0, firstIndex)
+            Assert.Equal(2, firstIndex)
 
             Assert.True(nested.ContainsKey("second"))
             let (secondEntries, secondIndex) = nested["second"]
@@ -283,7 +283,7 @@ module WasmTests =
             Assert.True(nested.ContainsKey("third"))
             let (thirdEntries, thirdIndex) = nested["third"]
             Assert.Equal(2, thirdEntries.Count)
-            Assert.Equal(2, thirdIndex)
+            Assert.Equal(0, thirdIndex)
 
         | Wasm.Locals _ -> raise (new Exception("Should have been nested"))
 
@@ -301,7 +301,7 @@ module WasmTests =
 
     [<Fact>]
     let ``Can test compiling nested function`` () =
-        let input = "func main() { add(1,2); } func add(x, y) { x + y; }"
+        let input = "func add(x, y) { x + y; } func main() { add(1,2); }"
 
         let wasmBytes = EndToEnd.compileModuleAndPrint input false
 
@@ -390,3 +390,12 @@ func isZero(x) {
         let mainResult = runInt32FuncWithInt32Return "countTo" wasmBytes 10
 
         Assert.Equal(10, mainResult)
+
+    [<Fact>]
+    let ``Can throw error when encountering an undefined function`` () =
+        let input = "func main() { add(1,2); } func add(x, y) { x + y; }"
+
+        let excep =
+            Assert.Throws<Exception>(fun () -> EndToEnd.compileModuleAndPrint input false :> obj)
+
+        Assert.Equal("The 'add' function has not been defined before being called", excep.Message)

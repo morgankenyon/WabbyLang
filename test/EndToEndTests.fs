@@ -30,7 +30,7 @@ module EndToEndTests =
 
     [<Fact>]
     let ``Can build SymbolMap with nested function definition`` () =
-        let input = "func doIt() { add(1,2); } func add(x, y) { x + y; }"
+        let input = "func add(x, y) { x + y; } func doIt() { add(1,2); }"
 
         let symbolScope = EndToEnd.compileToBuildSymbolMap input
 
@@ -45,7 +45,7 @@ module EndToEndTests =
     [<Fact>]
     let ``Can test compiling triple nested function`` () =
         let input =
-            "func main() { add(1,2); } func add(x, y) { let mul = multi(x, y); mul + x + y; } func multi(z, v) { z * v; }"
+            "func multi(z, v) { z * v; } func add(x, y) { let mul = multi(x, y); mul + x + y; } func main() { add(1,2); }"
 
         let wasmBytes = EndToEnd.compileModuleAndPrint input true
 

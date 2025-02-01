@@ -458,6 +458,24 @@ module Wasm =
             wasmBytes
         | _ -> [||]
 
+    let rec confirmFunctionDefined (expression: Ast.Expression) (scopes: SymbolScope) =
+        match expression.ExprType() with
+        | Ast.ExpressionType.CallExpression ->
+            let callExpr = expression :?> Ast.CallExpression
+
+            let funcName = callExpr.funcName
+            let funcMapping = scopes.First.Value
+
+            match funcMapping with
+            | Nested (inner) ->
+                if inner.ContainsKey funcName then
+                    ()
+                else
+                    raise (new Exception($"The '{funcName}' function has not been defined before being called"))
+            | _ -> ()
+        | _ -> ()
+
+
     let rec buildSymbolTable (statement: Ast.Statement) (scopes: SymbolScope) =
         match statement.StateType() with
         | Ast.StatementType.Module ->
@@ -502,9 +520,7 @@ module Wasm =
                 | Locals locals -> locals.Count
 
             let symbolEntry =
-                {
-
-                  name = name
+                { name = name
                   index = idx
                   symbolType = SymbolType.Local }
 
@@ -518,7 +534,12 @@ module Wasm =
                 buildSymbolTable state scopes
 
             ()
+        | Ast.StatementType.ExpressionStatement ->
+            let expr = statement :?> Ast.ExpressionStatement
 
+            confirmFunctionDefined expr.expression scopes
+
+            ()
         | _ -> ()
 
     let buildSymbolMap (codeModule: Ast.Module) =
