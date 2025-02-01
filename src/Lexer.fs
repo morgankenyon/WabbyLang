@@ -56,25 +56,59 @@ module Lexer =
         let underscore = ('_' = ch)
         lowerCase || upperCase || underscore
 
+    let isEquals (ch: char) = ch = '='
+    let isSemicolon (ch: char) = ch = ';'
+
+    let isWhitespace (ch: char) = ch = ' '
+
     let isDigit (ch: char) =
         ch.CompareTo('0') >= 0 && ch.CompareTo('9') <= 0
 
-    let canReadLetter (l: LexerState) =
-        //ensure I can read next position
-        let canReadNextPosition = l.position + 1 < l.input.Length
+    let canReadNextPosition (l: LexerState) =
+        l.position + 1 < l.input.Length
 
-        canReadNextPosition
-        && isLetter (l.input.Chars(l.position + 1))
+    let isIdentifierOver (l: LexerState) =
+        let canReadNextPosition = canReadNextPosition l
+        if canReadNextPosition
+        then
+            let ch = peekChar l
+            ch = ' '
+            || ch = ';'
+            || ch = '='
+            || ch = '('
+            || ch = ')'
+            || ch = ','
+            || ch = '\n'
+            || ch = '\r'
+        else
+            true
+
+    let canReadLetter (l: LexerState) =
+        let isValidLetter = 
+            canReadNextPosition l
+            && isLetter (l.input.Chars(l.position + 1))
+
+        isValidLetter
+
+    let canReadLetterOrDigit (l: LexerState) =
+        canReadNextPosition l
+        && (isLetter (l.input.Chars(l.position + 1))
+            || isDigit (l.input.Chars(l.position + 1)))
 
     let readIdentifier (l: LexerState) =
         let pos = l.position
 
-        while canReadLetter (l) do
+        while canReadLetterOrDigit (l) do
             readChar l
 
-        let literal = l.input.Substring(pos, (l.position - pos + 1))
-        let tokenType = lookupIdent literal
-        (tokenType, literal)
+        if isIdentifierOver l
+        then
+            let literal = l.input.Substring(pos, (l.position - pos + 1))
+            let tokenType = lookupIdent literal
+            (tokenType, literal)
+        else
+            let peekChar = peekChar l
+            raise (new System.Exception($"'{peekChar}' is not allowed in an identifier"))
 
     let canReadDigit (l: LexerState) =
         //ensure I can read next position

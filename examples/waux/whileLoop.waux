@@ -1,0 +1,11 @@
+func countTo(n) {
+    let x = 0; 
+    while (x < n) {
+        x := x + 1; 
+    }
+    x
+}
+
+func main() {
+    countTo(10)
+}

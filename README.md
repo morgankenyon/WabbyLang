@@ -30,7 +30,7 @@ How to compile and use.
 * Write a valid `.waux` program
   * See [examples](./examples/waux/) to get started
   * Every waux file requires a 0 parameter `main` function
-  * All code required must be in your `.waux` file, waux does not currently support importing across files.
+  * All code must be in a single `.waux` file, waux does not currently support importing across files.
 * Run `waux compile <.waux file>` to generate a wasm file
 * Run `waux run <.wasm file>` to run the generated wasm
   * Can also run in any other wasm compliant runtime.
@@ -61,11 +61,11 @@ func main() {
 }
 ```
 
-A main function that returns a value.
+A main function that returns a hard coded value.
 
 ### Variables
 
-You can define a variable to hold values using the `let` binding.
+You can declare and define a variable to hold values using the `let` binding.
 
 ```
 func main() {
@@ -74,7 +74,23 @@ func main() {
 }
 ```
 
-Currently variables names can only be made of alpha characters.
+Once a variable has been declared, you change change the value bu using the ':=' binding.
+
+```
+func main() {
+    let val = 23;
+    val := val - 11;
+    val
+}
+```
+
+Currently variables and function names can be made of the following values:
+* Alpha characters: [a-zA-Z]
+* Digit characters: [0-9]
+* Underscore: [_]
+* CombinedRegex: [a-zA-Z_0-9]+
+
+> semicolons separate expressions, the last semicolon is unneeded to indicate a return type
 
 ### Mathematical Expressions
 
@@ -87,6 +103,21 @@ func main() {
     a * 2 + b
 }
 ```
+
+and another
+
+```
+func main() {
+    let a = 5;
+    let b = 10;
+    a * (2 + b)
+}
+```
+
+Status:
+* All four primary mathematical operations (+, -, *, /)
+* Operator precedence (* before +, etc)
+* Use of parentheses to denotate precedence
 
 ### If/Else Expressions
 
@@ -103,6 +134,30 @@ func main() {
     result
 }
 ```
+
+Status:
+* Currently `else if` statement is not supported
+* Right now the `else` is optional, but will be changing in a future release
+
+### While Loops
+
+You can leverage a while loop like below.
+```
+func countTo(n) {
+    let x = 0; 
+    while (x < n) {
+        x := x + 1; 
+    }
+    x;
+}
+
+func main() {
+    countTo(10)
+}
+```
+
+Status:
+* No `break` or `continue` keywords are currently supported
 
 ## Code Formatting
 
