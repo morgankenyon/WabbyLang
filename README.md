@@ -48,6 +48,9 @@ Waux currently supports the following language concepts:
   * Only supports int32 values at the moment
   * Support operator precedence
 
+### Only Supports int32 operations
+
+Right now, waux only supports int32 operations. Any other number types will lead to undefined behavior.
 
 ### Adding
 

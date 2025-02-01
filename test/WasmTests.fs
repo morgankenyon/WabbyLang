@@ -313,21 +313,28 @@ module WasmTests =
 
     [<Fact>]
     let ``Can test compiling if else statement`` () =
-        let input =
+        let zeroInput =
             """
-func isZero(x) {
+func main() {
+    let x = 0;
+    let result = if (x) { 0 } else { 1 };
+    result
+}"""
+        let oneInput =
+            """
+func main() {
+    let x = 1;
     let result = if (x) { 0 } else { 1 };
     result
 }"""
 
-        let wasmBytes = EndToEnd.compileModuleAndPrint input false
+        let zeroBytes = EndToEnd.compileModule zeroInput
+        let isZero = runFuncWithInt32Return "main" zeroBytes
+        let oneBytes = EndToEnd.compileModule oneInput
+        let isOne = runFuncWithInt32Return "main" zeroBytes
 
-        Assert.True(wasmBytes.Length > 0)
-
-        let isZero = runInt32FuncWithInt32Return "isZero" wasmBytes
-
-        Assert.Equal(1, isZero 0)
-        Assert.Equal(0, isZero 1)
+        Assert.Equal(1, isZero)
+        Assert.Equal(1, isOne)
 
     [<Theory>]
     [<InlineData("a > b", 43, 42, 1)>]
@@ -357,37 +364,37 @@ func isZero(x) {
     [<InlineData("a or b", 0, 1, 1)>]
     [<InlineData("a or b", 1, 1, 1)>]
     let ``Can test binary comparison operators`` operation p1 p2 expectedResult =
-        let input = $"func main(a, b) {{ {operation} }}"
+        let input = $"func calc(a, b) {{ {operation} }} func main() {{ calc({p1}, {p2}); }}"
 
         let wasmBytes = EndToEnd.compileModuleAndPrint input false
 
         Assert.True(wasmBytes.Length > 0)
 
-        let result = runBinaryInt32Expression "main" wasmBytes p1 p2
+        let result = runWithInt32Return wasmBytes
 
         Assert.Equal(expectedResult, result)
 
     [<Fact>]
     let ``Can test assignment functionality`` () =
-        let input = "func main(x) { x := x + 13; x }"
+        let input = "func main() { let x = 10; x := x + 13; x }"
 
         let wasmBytes = EndToEnd.compileModuleAndPrint input false
 
         Assert.True(wasmBytes.Length > 0)
 
-        let mainResult = runInt32FuncWithInt32Return "main" wasmBytes 10
+        let mainResult = runFuncWithInt32Return "main" wasmBytes
 
         Assert.Equal(23, mainResult)
 
     [<Fact>]
     let ``Can test while loop`` () =
-        let input = "func countTo(n) { let x = 0; while (x < n) { x := x + 1; } x; }"
+        let input = "func countTo(n) { let x = 0; while (x < n) { x := x + 1; } x; } func main() { countTo(10) }"
 
         let wasmBytes = EndToEnd.compileModuleAndPrint input false
 
         Assert.True(wasmBytes.Length > 0)
 
-        let mainResult = runInt32FuncWithInt32Return "countTo" wasmBytes 10
+        let mainResult = runWithInt32Return wasmBytes
 
         Assert.Equal(10, mainResult)
 
@@ -399,3 +406,21 @@ func isZero(x) {
             Assert.Throws<Exception>(fun () -> EndToEnd.compileModuleAndPrint input false :> obj)
 
         Assert.Equal("The 'add' function has not been defined before being called", excep.Message)
+
+    [<Fact>]
+    let ``Can throw error when program does not have a main function`` () =
+        let input = "func test() { 1 + 3; }"
+
+        let excep =
+            Assert.Throws<Exception>(fun () -> EndToEnd.compileModuleAndPrint input false :> obj)
+
+        Assert.Equal("Waux requires a zero parameter 'main' function to exist", excep.Message)
+
+    [<Fact>]
+    let ``Can throw error when program has arguments in main function`` () =
+        let input = "func main(x) { x; }"
+
+        let excep =
+            Assert.Throws<Exception>(fun () -> EndToEnd.compileModuleAndPrint input false :> obj)
+
+        Assert.Equal("Waux requires a zero parameter 'main' function to exist", excep.Message)
