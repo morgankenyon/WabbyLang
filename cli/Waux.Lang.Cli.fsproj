@@ -7,6 +7,21 @@
 	  <PackAsTool>true</PackAsTool>
 	  <ToolCommandName>waux</ToolCommandName>
 	  <PackageOutputPath>./nupkg</PackageOutputPath>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <PackageId>Waux.Lang.Cli</PackageId>
+	  <Title>Waux.Lang.Cli</Title>
+	  <Version>0.0.1</Version>
+	  <Authors>Morgan Kenyon</Authors>
+	  <Description>A Cli for compiling and running WauxLang files.</Description>
+	  <Summary>A Cli for compiling and running WauxLang files.</Summary>
+	  <PackageProjectUrl>https://github.com/morgankenyon/waux-lang</PackageProjectUrl>
+	  <RepositoryUrl>https://github.com/morgankenyon/waux-lang.git</RepositoryUrl>
+	  <RepositoryType>git</RepositoryType>
+	  <PackageTags>wasm,language</PackageTags>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <Copyright>Copyright © Morgan Kenyon 2025</Copyright>
+	  <NeutralLanguage>en-US</NeutralLanguage>
+	  <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,5 +37,9 @@
   <ItemGroup>
     <ProjectReference Include="..\src\Waux.Lang.fsproj" />
   </ItemGroup>
+
+	<ItemGroup>
+		<None Include="./README.md" Pack="true" PackagePath="" />
+	</ItemGroup>
 
 </Project>

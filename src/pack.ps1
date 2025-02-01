@@ -1,0 +1,1 @@
+dotnet pack Waux.Lang.csproj -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg

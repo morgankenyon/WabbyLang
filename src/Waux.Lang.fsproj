@@ -3,6 +3,20 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <PackageId>Waux.Lang</PackageId>
+	  <Title>Waux.Lang</Title>
+	  <Version>0.0.1</Version>
+	  <Authors>Morgan Kenyon</Authors>
+	  <Description>A new programming languages that compiles to wasm.</Description>
+	  <Summary>A new programming languages that compiles to wasm.</Summary>
+	  <PackageProjectUrl>https://github.com/morgankenyon/waux-lang</PackageProjectUrl>
+	  <RepositoryUrl>https://github.com/morgankenyon/waux-lang.git</RepositoryUrl>
+	  <RepositoryType>git</RepositoryType>
+	  <PackageTags>wasm,language</PackageTags>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <Copyright>Copyright © Morgan Kenyon 2025</Copyright>
+	  <NeutralLanguage>en-US</NeutralLanguage>
+	  <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +35,10 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="Waux.Lang.Test" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="../README.md" Pack="true" PackagePath="" />
 	</ItemGroup>
 
 </Project>
