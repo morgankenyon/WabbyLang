@@ -45,12 +45,14 @@ Waux currently supports the following language concepts:
 * If/else blocks
 * Most boolean comparisons
 * Most integer operations
-  * Only supports int32 values at the moment
+  * With clarification below
   * Support operator precedence
 
-### Only Supports int32 operations
+### int32 support clarification
 
-Right now, waux only supports int32 operations. Any other number types will lead to undefined behavior.
+WebAssembly stores numbers in memory in variable width. Right now Waux works with int32s that can be stored in one byte.
+
+This will be fixed in an upcoming release.
 
 ### Simple main function
 
@@ -74,7 +76,7 @@ func main() {
 }
 ```
 
-Once a variable has been declared, you change change the value bu using the ':=' binding.
+Once a variable has been declared, you change change the value by using the `:=` operator.
 
 ```
 func main() {
@@ -90,7 +92,9 @@ Currently variables and function names can be made of the following values:
 * Underscore: [_]
 * CombinedRegex: [a-zA-Z_0-9]+
 
-> semicolons separate expressions, the last semicolon is unneeded to indicate a return type
+### Semicolons
+
+Semicolons separate expressions, the last semicolon is unneeded to indicate a return type. Future work may drop the need for semicolons
 
 ### Mathematical Expressions
 
@@ -157,7 +161,7 @@ func main() {
 ```
 
 Status:
-* No `break` or `continue` keywords are currently supported
+* `break` or `continue` keywords are currently supported
 
 ## Code Formatting
 
