@@ -186,7 +186,7 @@ module Wasm =
         // [0x01, 0x00, 0x00, 0x00]
         int32ToBytes (1)
     [<Literal>]
-    let SEVEN_BIT_MASK = 0b01111111uy
+    let SEVEN_BIT_MASK = 127u
 //    const SEVEN_BIT_MASK = 0b01111111;
 
 //function u32(v) {
@@ -199,7 +199,7 @@ module Wasm =
 //  return r;
 //}
     let u32_2 (v: uint) =
-        let vall = uint32ToBytes v
+        let vall = v
         let r = new ResizeArray<byte>()
 
         let b = vall &&& SEVEN_BIT_MASK
