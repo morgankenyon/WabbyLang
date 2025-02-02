@@ -384,7 +384,7 @@ func main() {
     let ``Can test binary arithmetic operators`` operation p1 p2 expectedResult =
         let input = $"func calc(a, b) {{ {operation} }} func main() {{ calc({p1}, {p2}); }}"
 
-        let wasmBytes = EndToEnd.compileModuleAndPrint input true
+        let wasmBytes = EndToEnd.compileModuleAndPrint input false
 
         Assert.True(wasmBytes.Length > 0)
 
@@ -462,3 +462,67 @@ func main() {
         let mainResult = runWithInt32Return wasmBytes
 
         Assert.Equal(0, mainResult)
+
+    [<Fact>]
+    let ``Can ensure variable set in while loop works as expected``() =
+        let input = """
+func main() {
+    let n = 1;
+    while (n < 10) {
+        let count = 1;
+        n := n + count;
+    };
+    n
+}"""
+        let wasmBytes = EndToEnd.compileModuleDebug input
+
+        Assert.True(wasmBytes.Length > 0)
+
+        let mainResult = runWithInt32Return wasmBytes
+
+        Assert.Equal(10, mainResult)
+
+    [<Fact>]
+    let ``Can handle more complicated if statement``() =
+        let input = """
+func main() {
+    let n = 5;
+    let num = if ((n % 3 == 0) or (n % 5 == 0)) {
+        n
+    } else {
+        0
+    };
+    num
+}"""
+        let wasmBytes = EndToEnd.compileModuleDebug input
+
+        Assert.True(wasmBytes.Length > 0)
+
+        let mainResult = runWithInt32Return wasmBytes
+
+        Assert.Equal(5, mainResult)
+
+    [<Fact>]
+    let ``Can handle complicated or inside while loop``() =
+        let input = """
+func main() {
+    let count = 0;
+    let n = 1;
+    while (n < 10) {
+        let num = if (((n % 3 == 0) or ((n % 5) == 0))) {
+            n;
+        } else {
+            0;
+        };
+        count := count + num;
+        n := n + 1;
+    };
+    count
+}"""
+        let wasmBytes = EndToEnd.compileModuleAndPrint input true
+
+        Assert.True(wasmBytes.Length > 0)
+
+        let mainResult = runWithInt32Return wasmBytes
+
+        Assert.Equal(5, mainResult)

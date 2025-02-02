@@ -19,3 +19,8 @@ Error: readWasm failed:
 ```
 function body must end with END opcode
 ```
+
+```
+Error: readWasm failed:
+000001f: error: unable to read u32 leb128: function body count
+```

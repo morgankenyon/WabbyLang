@@ -170,6 +170,13 @@ module Wasm =
         | true -> bytes
         | false -> Array.rev bytes
 
+    let uint32ToBytes (v: uint32) =
+        let bytes = BitConverter.GetBytes(v)
+
+        match BitConverter.IsLittleEndian with
+        | true -> bytes
+        | false -> Array.rev bytes
+
     let magic () =
         // [0x00, 0x61, 0x73, 0x6d]
         let nullChar = Convert.ToChar(0).ToString()
@@ -178,10 +185,30 @@ module Wasm =
     let version () =
         // [0x01, 0x00, 0x00, 0x00]
         int32ToBytes (1)
+    [<Literal>]
+    let SEVEN_BIT_MASK = 0b01111111uy
+//    const SEVEN_BIT_MASK = 0b01111111;
 
-    let u32 (v: uint) = if v <= 127u then byte v else 0uy
+//function u32(v) {
+//  let val = v;
+//  const r = [];
 
-    let i32 (v: int) = if v <= 63 then byte v else 0uy
+//  const b = val & SEVEN_BIT_MASK;
+//  r.push(b);
+
+//  return r;
+//}
+    let u32_2 (v: uint) =
+        let vall = uint32ToBytes v
+        let r = new ResizeArray<byte>()
+
+        let b = vall &&& SEVEN_BIT_MASK
+        r.Add b
+
+        
+    let u32 (v: uint) = if v <= 127u then byte v else raise (new Exception("Value too large for current unsigned integer encoding"))
+
+    let i32 (v: int) = if v <= 63 then byte v else raise (new Exception("Value too large for current signed integer encoding"))
 
     let locals (n: int32) (b: byte) = [| i32 n; b |]
 
@@ -395,6 +422,7 @@ module Wasm =
                 let wasmBytes = Array.concat [ exprBytes; valueBytes ]
                 wasmBytes
             | Error msg -> raise (Exception(msg))
+        
         | _ -> [||]
 
     and private statementToWasm
@@ -542,6 +570,11 @@ module Wasm =
 
             confirmFunctionDefined expr.expression scopes
 
+            ()
+        | Ast.StatementType.WhileStatement ->
+            let whileState = statement :?> Ast.WhileStatement
+
+            buildSymbolTable whileState.body scopes
             ()
         | _ -> ()
 
