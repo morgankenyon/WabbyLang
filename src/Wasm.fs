@@ -133,6 +133,11 @@ module Wasm =
     [<Literal>]
     let INSTR_i32_OR = 114uy
 
+    [<Literal>]
+    let SEVEN_BIT_MASK : uint32 = 127u
+    [<Literal>]
+    let CONTINUATION_BIT : byte = 128uy
+
     type WasmFuncBytes =
         { name: string
           paramTypes: byte array
@@ -176,7 +181,21 @@ module Wasm =
         // [0x01, 0x00, 0x00, 0x00]
         int32ToBytes (1)
 
-    let u32 (v: uint) = if v <= 127u then byte v else 0uy
+    let u32 (v: uint32) =
+        let mutable vall = v
+        let mutable r : byte array = [||]
+        let mutable more = true
+
+        while more do
+            let b : byte = (byte)(vall &&& SEVEN_BIT_MASK)
+            vall <- vall >>> 7
+            more <- vall <> 0u
+            let newVall =
+                if more then b ||| CONTINUATION_BIT
+                else b
+            r <- Array.concat [ r; [| newVall |] ]
+
+        r
 
     let i32 (v: int) = if v <= 63 then byte v else 0uy
 
@@ -391,7 +410,6 @@ module Wasm =
                 let wasmBytes = Array.concat [ exprBytes; valueBytes ]
                 wasmBytes
             | Error msg -> raise (Exception(msg))
-        | _ -> [||]
 
     and private statementToWasm
         (state: Ast.Statement)
