@@ -205,7 +205,7 @@ module WasmTests =
         let funcsec = Wasm.funcsec ([| [| 0uy |] |])
 
         //creating export section
-        let exportDesc = Wasm.exportdesc (0uy)
+        let exportDesc = Wasm.exportdesc [|0uy|]
         let export = Wasm.export "main" exportDesc
         let exportsec = Wasm.exportsec [| export |]
 
@@ -510,13 +510,6 @@ func main() {
                 else
                     b ||| CONTINUATION_BIT
             r <- Array.concat [ r; [| nextVall |] ]
-
-            //if ((val === 0n && !signBitSet) || (val === -1n && signBitSet)) {
-            //  more = false;
-            //  r.push(b);
-            //} else {
-            //  r.push(b | CONTINUATION_BIT);
-            //}
         r
         
     let getSignedExpectedBytes (num: int32) =
@@ -524,34 +517,49 @@ func main() {
         | 1 -> [| 1uy |]
         | -1 -> [| 127uy |]
         | 63 -> [| 63uy |]
-        | -64 -> [| 64uy |]
         | 64 -> [| 192uy; 0uy |]
+        | -64 -> [| 64uy |]
+        | -65 -> [| 191uy; 127uy |]
         | 127 -> [| 255uy; 0uy |]
         | 128 -> [| 128uy; 1uy |]
-        //| 16383 -> [| 255uy; 127uy |]
-        //| 16384u -> [| 128uy; 128uy; 1uy |]
-        //| 283828u -> [| 180uy; 169uy; 17uy |]
-        //| 4_294_967_295u -> [| 255uy; 255uy; 255uy; 255uy; 15uy|]
+        | -128 -> [| 128uy; 127uy |]
+        | -129 -> [| 255uy; 126uy |]
+        | 7196 -> [| 156uy; 56uy |]
+        | 8192 -> [| 128uy; 192uy; 0uy |]
+        | -7196 -> [| 228uy; 71uy |]
+        | -8193 -> [| 255uy; 191uy; 127uy |]
+        | 283828 -> System.Convert.FromHexString("B4A911")
+        | 2_147_483_647 -> System.Convert.FromHexString("FFFFFFFF07")
+        | -283828 -> System.Convert.FromHexString("CCD66E")
+        | -2_147_483_648 -> System.Convert.FromHexString("8080808078")
         | _ -> [||]
 
     [<Theory>]
-    [<InlineData(1, 1)>]
-    [<InlineData(-1, 1)>]
-    [<InlineData(63, 1)>]
-    [<InlineData(-64, 1)>]
-    [<InlineData(64, 2)>]
-    [<InlineData(127, 2)>]
-    [<InlineData(128, 2)>]
-    //[<InlineData(16383u, 2)>]
-    //[<InlineData(16384u, 3)>]
-    //[<InlineData(283828u, 3)>]
-    //[<InlineData(4_294_967_295u, 5)>]
-    let ``Can encode signed integer via LEB128`` num expectedLength =
+    [<InlineData(1)>]
+    [<InlineData(-1)>]
+    [<InlineData(63)>]
+    [<InlineData(64)>]
+    [<InlineData(-64)>]
+    [<InlineData(-65)>]
+    [<InlineData(127)>]
+    [<InlineData(128)>]
+    [<InlineData(-128)>]
+    [<InlineData(-129)>]
+    [<InlineData(7196)>]
+    [<InlineData(8192)>]
+    [<InlineData(-7196)>]
+    [<InlineData(-8193)>]
+    [<InlineData(283828)>]
+    [<InlineData(2_147_483_647)>]
+    [<InlineData(-283828)>]
+    [<InlineData(-2_147_483_648)>]
+    let ``Can encode signed integer via LEB128`` num =
         let lebEncoded = i32 num
-
-        Assert.Equal(expectedLength, lebEncoded.Length)
-
         let expectedBytes = getSignedExpectedBytes num
+
+        Assert.Equal(expectedBytes.Length, lebEncoded.Length)
+
+        let expectedLength = expectedBytes.Length
 
         if expectedLength = 5 then
             Assert.Equal(expectedBytes[4], lebEncoded[4])
