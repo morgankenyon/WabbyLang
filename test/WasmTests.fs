@@ -303,7 +303,7 @@ module WasmTests =
     let ``Can test compiling nested function`` () =
         let input = "func add(x, y) { x + y; } func main() { add(1,2); }"
 
-        let wasmBytes = EndToEnd.compileModuleAndPrint input false
+        let wasmBytes = EndToEnd.compileModuleAndPrint input true
 
         Assert.True(wasmBytes.Length > 0)
 
@@ -525,9 +525,9 @@ func main() {
         | -1 -> [| 127uy |]
         | 63 -> [| 63uy |]
         | -64 -> [| 64uy |]
-        //| 64 -> [| 64uy |]
-        //| 127 -> [| 127uy |]
-        //| 128 -> [| 128uy; 1uy |]
+        | 64 -> [| 192uy; 0uy |]
+        | 127 -> [| 255uy; 0uy |]
+        | 128 -> [| 128uy; 1uy |]
         //| 16383 -> [| 255uy; 127uy |]
         //| 16384u -> [| 128uy; 128uy; 1uy |]
         //| 283828u -> [| 180uy; 169uy; 17uy |]
@@ -539,9 +539,9 @@ func main() {
     [<InlineData(-1, 1)>]
     [<InlineData(63, 1)>]
     [<InlineData(-64, 1)>]
-    //[<InlineData(64u, 1)>]
-    //[<InlineData(127u, 1)>]
-    //[<InlineData(128u, 2)>]
+    [<InlineData(64, 2)>]
+    [<InlineData(127, 2)>]
+    [<InlineData(128, 2)>]
     //[<InlineData(16383u, 2)>]
     //[<InlineData(16384u, 3)>]
     //[<InlineData(283828u, 3)>]
