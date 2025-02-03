@@ -1,7 +1,7 @@
 func main() { 
-  let p = 10;
+  let p = 30;
   let result = if (p > 20) {
-    10
+    p
   } else {
     0
   };

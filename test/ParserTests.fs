@@ -324,6 +324,8 @@ module ParserTests =
     [<InlineData("a * b * c", "((a * b) * c)")>]
     [<InlineData("a * b / c", "((a * b) / c)")>]
     [<InlineData("a + b / c", "(a + (b / c))")>]
+    [<InlineData("a + b % c", "(a + (b % c))")>]
+    [<InlineData("(a + b) % c", "((a + b) % c)")>]
     [<InlineData("a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)")>]
     let ``Can test operator precedence`` input expected =
         let lexer = Lexer.createLexer input
@@ -562,6 +564,7 @@ func isZero(x) {
     [<InlineData("2 or 9", "(2 or 9)")>]
     [<InlineData("2 < 3 or 9 == 1", "((2 < 3) or (9 == 1))")>]
     [<InlineData("2 < 3 and 9 == 1", "((2 < 3) and (9 == 1))")>]
+    [<InlineData("(((n % 3) == 0) or ((n % 5) == 0))", "(((n % 3) == 0) or ((n % 5) == 0))")>]
     let ``Can parse boolean expressions`` input expected =
         let lexer = Lexer.createLexer input
         let parser = Parser.createParser lexer

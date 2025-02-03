@@ -1,0 +1,14 @@
+func main() {
+    let count = 0;
+    let n = 1;
+    while (n < 1000) {
+        let num = if (((n % 3 == 0) or ((n % 5) == 0))) {
+            n
+        } else {
+            0
+        };
+        count := count + num;
+        n := n + 1;
+    }
+    count
+}

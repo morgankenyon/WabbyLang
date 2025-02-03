@@ -56,6 +56,9 @@ module Wasm =
     let INSTR_i32_DIV_S = 109uy
 
     [<Literal>]
+    let INSTR_i32_MOD_S = 111uy
+
+    [<Literal>]
     let i64_VAL_TYPE = 126uy
 
     [<Literal>]
@@ -174,6 +177,13 @@ module Wasm =
         | true -> bytes
         | false -> Array.rev bytes
 
+    let uint32ToBytes (v: uint32) =
+        let bytes = BitConverter.GetBytes(v)
+
+        match BitConverter.IsLittleEndian with
+        | true -> bytes
+        | false -> Array.rev bytes
+
     let magic () =
         // [0x00, 0x61, 0x73, 0x6d]
         let nullChar = Convert.ToChar(0).ToString()
@@ -182,6 +192,8 @@ module Wasm =
     let version () =
         // [0x01, 0x00, 0x00, 0x00]
         int32ToBytes (1)
+    [<Literal>]
+    let SEVEN_BIT_MASK = 127u
 
     let u32 (v: uint32) =
         let mutable vall = v
@@ -316,6 +328,7 @@ module Wasm =
         | "-" -> INSTR_i32_SUB
         | "*" -> INSTR_i32_MUL
         | "/" -> INSTR_i32_DIV_S
+        | "%" -> INSTR_i32_MOD_S
         //comparison
         | "==" -> INSTR_i32_EQ
         | "!=" -> INSTR_i32_NE
@@ -430,7 +443,8 @@ module Wasm =
 
                 let wasmBytes = Array.concat [ exprBytes; valueBytes ]
                 wasmBytes
-            | Error msg -> raise (Exception(msg))
+            | Error msg -> raise (Exception(msg))        
+        | _ -> [||]
 
     and private statementToWasm
         (state: Ast.Statement)
@@ -574,6 +588,11 @@ module Wasm =
 
             confirmFunctionDefined expr.expression scopes
 
+            ()
+        | Ast.StatementType.WhileStatement ->
+            let whileState = statement :?> Ast.WhileStatement
+
+            buildSymbolTable whileState.body scopes
             ()
         | _ -> ()
 

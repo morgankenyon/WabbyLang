@@ -29,6 +29,7 @@ module Parser =
             .Add(Token.MINUS, ExprPrecedence.SUM)
             .Add(Token.SLASH, ExprPrecedence.PRODUCT)
             .Add(Token.ASTERISK, ExprPrecedence.PRODUCT)
+            .Add(Token.MODULO, ExprPrecedence.PRODUCT)
             .Add(Token.LPAREN, ExprPrecedence.CALL)
     //.Add(TokenType.LBRACKET, ExprPrecedence.INDEX)
 
@@ -453,6 +454,7 @@ module Parser =
         infixFns.Add(Token.MINUS, parseInfixExpression)
         infixFns.Add(Token.SLASH, parseInfixExpression)
         infixFns.Add(Token.ASTERISK, parseInfixExpression)
+        infixFns.Add(Token.MODULO, parseInfixExpression)
         infixFns.Add(Token.EQ, parseInfixExpression)
         infixFns.Add(Token.NOT_EQ, parseInfixExpression)
         infixFns.Add(Token.LT, parseInfixExpression)

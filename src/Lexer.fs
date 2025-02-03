@@ -156,8 +156,12 @@ module Lexer =
             (matchToken, ch.ToString() + l.ch.ToString())
         | _ -> (nonMatchToken, l.ch.ToString())
 
+    let buildTokenPair (l: LexerState) token =
+        (token, l.ch.ToString())
+
     let nextToken (l: LexerState) =
         skipWhitespace l
+        let getTP = buildTokenPair l
 
         let (tokenType, literal) =
             match l.ch with
@@ -166,6 +170,7 @@ module Lexer =
             | '-' -> (Token.MINUS, l.ch.ToString())
             | '*' -> (Token.ASTERISK, l.ch.ToString())
             | '/' -> (Token.SLASH, l.ch.ToString())
+            | '%' -> getTP Token.MODULO
             | '(' -> (Token.LPAREN, l.ch.ToString())
             | ')' -> (Token.RPAREN, l.ch.ToString())
             | ';' -> (Token.SEMICOLON, l.ch.ToString())

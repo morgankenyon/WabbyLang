@@ -120,6 +120,7 @@ func main() {
 
 Status:
 * All four primary mathematical operations (+, -, *, /)
+  * Plus modulo (%)
 * Operator precedence (* before +, etc)
 * Use of parentheses to denotate precedence
 
@@ -163,6 +164,26 @@ func main() {
 Status:
 * `break` or `continue` keywords are currently supported
 
+
+### Euler1
+
+Putting this all together, we have a solution for [euler1](https://projecteuler.net/problem=1):
+```
+func main() {
+    let count = 0;
+    let n = 1;
+    while (n < 1000) {
+        let num = if (((n % 3 == 0) or ((n % 5) == 0))) {
+            n
+        } else {
+            0
+        };
+        count := count + num;
+        n := n + 1;
+    }
+    count
+}
+```
 ## Code Formatting
 
 This repo currently uses [fantomas](https://fsprojects.github.io/fantomas/) in order to format the compiler.
