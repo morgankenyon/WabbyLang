@@ -220,6 +220,23 @@ func main() {
     count
 }
 ```
+
+## How I'm Learning
+
+In my day job I'm a web developer. This language is a compilation of two books that I've worked my way through.
+
+* [Writing an Interpreter in Go](https://interpreterbook.com/)
+  * This helped me understand lexing and parsing.
+  * I created [an implementation](https://github.com/morgankenyon/Monkey) in F#.
+* [WebAssembly from the Group Up](https://wasmgroundup.com/)
+  * This details how to compile code to WebAssembly.
+  * It's implemented in JavaScript using the [Ohm Parsing Library](https://ohmjs.org/).
+  * I used it as the basis for Waux's Web Assembly Compiler.
+
+Both of these books are very approachable introductions to language design and compilers.
+
+I would recommend these books if you are interested in learning about langauges and compilers.
+
 ## Code Formatting
 
 This repo currently uses [fantomas](https://fsprojects.github.io/fantomas/) in order to format the compiler.
