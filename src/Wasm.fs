@@ -137,11 +137,13 @@ module Wasm =
     let INSTR_i32_OR = 114uy
 
     [<Literal>]
-    let SEVEN_BIT_MASK_U : uint32 = 127u
+    let SEVEN_BIT_MASK_U: uint32 = 127u
+
     [<Literal>]
-    let SEVEN_BIT_MASK_S : int32 = 127
+    let SEVEN_BIT_MASK_S: int32 = 127
+
     [<Literal>]
-    let CONTINUATION_BIT : byte = 128uy
+    let CONTINUATION_BIT: byte = 128uy
 
     type WasmFuncBytes =
         { name: string
@@ -192,50 +194,63 @@ module Wasm =
     let version () =
         // [0x01, 0x00, 0x00, 0x00]
         int32ToBytes (1)
+
     [<Literal>]
     let SEVEN_BIT_MASK = 127u
 
     let u32 (v: uint32) =
         let mutable vall = v
-        let mutable r : byte array = [||]
+        let mutable r: byte array = [||]
         let mutable more = true
 
         while more do
-            let b : byte = (byte)(vall &&& SEVEN_BIT_MASK_U)
+            let b: byte = (byte) (vall &&& SEVEN_BIT_MASK_U)
             vall <- vall >>> 7
             more <- vall <> 0u
+
             let newVall =
-                if more then b ||| CONTINUATION_BIT
-                else b
+                if more then
+                    b ||| CONTINUATION_BIT
+                else
+                    b
+
             r <- Array.concat [ r; [| newVall |] ]
 
         r
 
     let i32 (v: int32) : byte array =
         let mutable vall = v
-        let mutable r : byte array = [||]
+        let mutable r: byte array = [||]
         let mutable more = true
         let signBit = 64uy
+
         while more do
-            let b : byte = (byte)(vall &&& SEVEN_BIT_MASK_S)
+            let b: byte = (byte) (vall &&& SEVEN_BIT_MASK_S)
             let signBitSet = (b &&& signBit) <> 0uy
-            
+
             vall <- vall >>> 7
 
-            let nextVall = 
-                if ((vall = 0 && (not signBitSet)) || (vall = -1 && signBitSet)) then
-                    more <- false                
+            let nextVall =
+                if ((vall = 0 && (not signBitSet))
+                    || (vall = -1 && signBitSet)) then
+                    more <- false
                     b
                 else
                     b ||| CONTINUATION_BIT
+
             r <- Array.concat [ r; [| nextVall |] ]
+
         r
 
     let locals (n: int32) (b: byte) = Array.concat [ i32 n; [| b |] ]
 
     let section (id: byte) (contents: byte array) =
         let normalizedSize = i32 contents.Length
-        let headers = Array.concat [ [| id |]; normalizedSize ]
+
+        let headers =
+            Array.concat [ [| id |]
+                           normalizedSize ]
+
         Array.concat [ headers; contents ]
 
     let vec (elements: byte array) =
@@ -293,8 +308,7 @@ module Wasm =
     let code (func: byte array) =
         let normalizedSize = i32 func.Length
 
-        Array.concat [ normalizedSize
-                       func ]
+        Array.concat [ normalizedSize; func ]
 
     let codesec (codes: byte array array) =
         vecFlatten codes |> section SECTION_ID_CODE
@@ -360,7 +374,11 @@ module Wasm =
         | Ast.ExpressionType.IntegerLiteral ->
             let integerLiteral = expr :?> Ast.IntegerLiteral
             let value = i32 integerLiteral.value
-            let wasmBytes = Array.concat [ [| INSTR_i32_CONST |] ; value ]
+
+            let wasmBytes =
+                Array.concat [ [| INSTR_i32_CONST |]
+                               value ]
+
             wasmBytes
         | Ast.ExpressionType.InfixExpression ->
             let infixExpression = expr :?> Ast.InfixExpression
@@ -381,7 +399,10 @@ module Wasm =
 
             match symbol with
             | Ok sy ->
-                let wasmBytes = Array.concat [ [| INSTR_LOCAL_GET |] ; i32 sy.index ]
+                let wasmBytes =
+                    Array.concat [ [| INSTR_LOCAL_GET |]
+                                   i32 sy.index ]
+
                 wasmBytes
             | Error msg -> raise (Exception(msg))
         | Ast.ExpressionType.CallExpression ->
@@ -403,7 +424,10 @@ module Wasm =
 
                 arguBytes <- Array.concat [ arguBytes; argTree ]
 
-            let valueBytes = Array.concat [ [| INSTR_CALL |]; i32 index ]
+            let valueBytes =
+                Array.concat [ [| INSTR_CALL |]
+                               i32 index ]
+
             let wasmBytes = Array.concat [ arguBytes; valueBytes ]
             wasmBytes
         | Ast.ExpressionType.IfElseExpression ->
@@ -436,15 +460,13 @@ module Wasm =
                 let exprBytes = expressionToWasm assignExpr.value symbols symbolMap
 
                 let valueBytes =
-                    Array.concat [
-                    [| INSTR_LOCAL_TEE |];
-                       i32 sy.index;
-                       [| INSTR_DROP |] ]
+                    Array.concat [ [| INSTR_LOCAL_TEE |]
+                                   i32 sy.index
+                                   [| INSTR_DROP |] ]
 
                 let wasmBytes = Array.concat [ exprBytes; valueBytes ]
                 wasmBytes
-            | Error msg -> raise (Exception(msg))        
-        | _ -> [||]
+            | Error msg -> raise (Exception(msg))
 
     and private statementToWasm
         (state: Ast.Statement)
@@ -459,7 +481,11 @@ module Wasm =
             match symbol with
             | Ok sy ->
                 let innerBytes = expressionToWasm letState.value symbols symbolMap
-                let valueBytes = Array.concat [ [| INSTR_LOCAL_SET |]; i32 sy.index ]
+
+                let valueBytes =
+                    Array.concat [ [| INSTR_LOCAL_SET |]
+                                   i32 sy.index ]
+
                 let wasmBytes = Array.concat [ innerBytes; valueBytes ]
                 wasmBytes
             | Error msg -> raise (Exception(msg))
@@ -496,7 +522,9 @@ module Wasm =
             let bodyBytes = statementToWasm whileState.body symbols symbolMap
 
             let brBytes =
-                Array.concat [[| INSTR_BR |]; i32 1; [| INSTR_END; INSTR_END |] ]
+                Array.concat [ [| INSTR_BR |]
+                               i32 1
+                               [| INSTR_END; INSTR_END |] ]
 
             let wasmBytes =
                 Array.concat [ loopBytes
@@ -594,7 +622,6 @@ module Wasm =
 
             buildSymbolTable whileState.body scopes
             ()
-        | _ -> ()
 
     let buildSymbolMap (codeModule: Ast.Module) =
         let scopes = new SymbolScope()
@@ -673,7 +700,7 @@ module Wasm =
         //creating func section
         let funcSection =
             functionDecls
-            |> Array.mapi (fun i x -> i32 i )
+            |> Array.mapi (fun i x -> i32 i)
             |> funcsec
 
         //creating export section
@@ -692,24 +719,25 @@ module Wasm =
 
     let confirmMainFunction (symbolScope: SymbolScope) =
         let mainName = "main"
+
         match symbolScope.First.Value with
         | Nested inner ->
-            if inner.ContainsKey mainName
-            then
+            if inner.ContainsKey mainName then
                 let (symbolDict, _) = inner[mainName]
-                let paramCount = 
+
+                let paramCount =
                     symbolDict.Values
                     |> Seq.where (fun st -> st.symbolType = SymbolType.Param)
                     |> Seq.length
-                if paramCount = 0
-                then
+
+                if paramCount = 0 then
                     ()
                 else
                     raise (new Exception("Waux requires a zero parameter 'main' function to exist"))
             else
                 raise (new Exception("Waux requires a zero parameter 'main' function to exist"))
         | Locals locals -> raise (new Exception("Should not be locals"))
-            
+
 
     let compile (codeModule: Ast.Module) =
         let symbolScope = buildSymbolMap codeModule

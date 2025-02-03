@@ -311,7 +311,7 @@ module LexerTests =
 
         expectedTokens
         |> List.iter (fun et -> AssertTokens(lexer, et))
-        
+
     [<Theory>]
     [<InlineData("x")>]
     [<InlineData("y")>]
@@ -319,28 +319,33 @@ module LexerTests =
     [<InlineData("addCount")>]
     [<InlineData("add_count")>]
     [<InlineData("p1")>]
-    let ``Can lex identifiers`` (input: string) =        
-        let expectedTokensRaw: (Token * string) list = [ (Token.IDENT, input); (Token.EOF, "") ]
+    let ``Can lex identifiers`` (input: string) =
+        let expectedTokensRaw: (Token * string) list =
+            [ (Token.IDENT, input)
+              (Token.EOF, "") ]
+
         let expectedTokens = buildTokenTypes expectedTokensRaw
 
         let lexer = Lexer.createLexer input
 
         expectedTokens
         |> List.iter (fun et -> AssertTokens(lexer, et))
-        
+
     [<Theory>]
     [<InlineData("x%")>]
     [<InlineData("yyyy11*")>]
     [<InlineData("add_count:")>]
     let ``Can error out on bad identifiers`` (input: string) =
-        let expectedTokensRaw: (Token * string) list = [ (Token.IDENT, input); (Token.EOF, "") ]
+        let expectedTokensRaw: (Token * string) list =
+            [ (Token.IDENT, input)
+              (Token.EOF, "") ]
+
         let expectedTokens = buildTokenTypes expectedTokensRaw
 
         let lexer = Lexer.createLexer input
 
         let excep =
-            Assert.Throws<Exception>(fun () ->                 
-                List.iter (fun et -> AssertTokens(lexer, et)) expectedTokens :> obj)
+            Assert.Throws<Exception>(fun () -> List.iter (fun et -> AssertTokens(lexer, et)) expectedTokens :> obj)
 
         let lastChar = input.Chars(input.Length - 1)
         Assert.Equal($"'{lastChar}' is not allowed in an identifier", excep.Message)

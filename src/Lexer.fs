@@ -64,14 +64,14 @@ module Lexer =
     let isDigit (ch: char) =
         ch.CompareTo('0') >= 0 && ch.CompareTo('9') <= 0
 
-    let canReadNextPosition (l: LexerState) =
-        l.position + 1 < l.input.Length
+    let canReadNextPosition (l: LexerState) = l.position + 1 < l.input.Length
 
     let isIdentifierOver (l: LexerState) =
         let canReadNextPosition = canReadNextPosition l
-        if canReadNextPosition
-        then
+
+        if canReadNextPosition then
             let ch = peekChar l
+
             ch = ' '
             || ch = ';'
             || ch = '='
@@ -84,7 +84,7 @@ module Lexer =
             true
 
     let canReadLetter (l: LexerState) =
-        let isValidLetter = 
+        let isValidLetter =
             canReadNextPosition l
             && isLetter (l.input.Chars(l.position + 1))
 
@@ -101,8 +101,7 @@ module Lexer =
         while canReadLetterOrDigit (l) do
             readChar l
 
-        if isIdentifierOver l
-        then
+        if isIdentifierOver l then
             let literal = l.input.Substring(pos, (l.position - pos + 1))
             let tokenType = lookupIdent literal
             (tokenType, literal)
@@ -156,8 +155,7 @@ module Lexer =
             (matchToken, ch.ToString() + l.ch.ToString())
         | _ -> (nonMatchToken, l.ch.ToString())
 
-    let buildTokenPair (l: LexerState) token =
-        (token, l.ch.ToString())
+    let buildTokenPair (l: LexerState) token = (token, l.ch.ToString())
 
     let nextToken (l: LexerState) =
         skipWhitespace l

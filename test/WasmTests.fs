@@ -205,7 +205,7 @@ module WasmTests =
         let funcsec = Wasm.funcsec ([| [| 0uy |] |])
 
         //creating export section
-        let exportDesc = Wasm.exportdesc [|0uy|]
+        let exportDesc = Wasm.exportdesc [| 0uy |]
         let export = Wasm.export "main" exportDesc
         let exportsec = Wasm.exportsec [| export |]
 
@@ -303,7 +303,7 @@ module WasmTests =
     let ``Can test compiling nested function`` () =
         let input = "func add(x, y) { x + y; } func main() { add(1,2); }"
 
-        let wasmBytes = EndToEnd.compileModuleAndPrint input true
+        let wasmBytes = EndToEnd.compileModuleAndPrint input false
 
         Assert.True(wasmBytes.Length > 0)
 
@@ -320,6 +320,7 @@ func main() {
     let result = if (x) { 0 } else { 1 };
     result
 }"""
+
         let oneInput =
             """
 func main() {
@@ -406,7 +407,8 @@ func main() {
 
     [<Fact>]
     let ``Can test while loop`` () =
-        let input = "func countTo(n) { let x = 0; while (x < n) { x := x + 1; } x; } func main() { countTo(10) }"
+        let input =
+            "func countTo(n) { let x = 0; while (x < n) { x := x + 1; } x; } func main() { countTo(10) }"
 
         let wasmBytes = EndToEnd.compileModuleAndPrint input false
 
@@ -444,8 +446,9 @@ func main() {
         Assert.Equal("Waux requires a zero parameter 'main' function to exist", excep.Message)
 
     [<Fact>]
-    let ``Can ensure if/else statment works as expected``() =
-        let input = """
+    let ``Can ensure if/else statment works as expected`` () =
+        let input =
+            """
 func main() { 
   let p = 10;
   let result = if (p > 20) {
@@ -455,6 +458,7 @@ func main() {
   };
   result
 }"""
+
         let wasmBytes = EndToEnd.compileModuleDebug input
 
         Assert.True(wasmBytes.Length > 0)
@@ -464,8 +468,9 @@ func main() {
         Assert.Equal(0, mainResult)
 
     [<Fact>]
-    let ``Can ensure variable set in while loop works as expected``() =
-        let input = """
+    let ``Can ensure variable set in while loop works as expected`` () =
+        let input =
+            """
 func main() {
     let n = 1;
     while (n < 10) {
@@ -474,6 +479,7 @@ func main() {
     };
     n
 }"""
+
         let wasmBytes = EndToEnd.compileModuleDebug input
 
         Assert.True(wasmBytes.Length > 0)
@@ -483,8 +489,9 @@ func main() {
         Assert.Equal(10, mainResult)
 
     [<Fact>]
-    let ``Can handle more complicated if statement``() =
-        let input = """
+    let ``Can handle more complicated if statement`` () =
+        let input =
+            """
 func main() {
     let n = 5;
     let num = if ((n % 3 == 0) or (n % 5 == 0)) {
@@ -494,6 +501,7 @@ func main() {
     };
     num
 }"""
+
         let wasmBytes = EndToEnd.compileModuleDebug input
 
         Assert.True(wasmBytes.Length > 0)
@@ -503,8 +511,9 @@ func main() {
         Assert.Equal(5, mainResult)
 
     [<Fact>]
-    let ``Can handle complicated or inside while loop``() =
-        let input = """
+    let ``Can handle complicated or inside while loop`` () =
+        let input =
+            """
 func main() {
     let count = 0;
     let n = 1;
@@ -519,7 +528,8 @@ func main() {
     };
     count
 }"""
-        let wasmBytes = EndToEnd.compileModuleAndPrint input true
+
+        let wasmBytes = EndToEnd.compileModuleAndPrint input false
 
         Assert.True(wasmBytes.Length > 0)
 
@@ -536,7 +546,7 @@ func main() {
         | 16383u -> [| 255uy; 127uy |]
         | 16384u -> [| 128uy; 128uy; 1uy |]
         | 283828u -> [| 180uy; 169uy; 17uy |]
-        | 4_294_967_295u -> [| 255uy; 255uy; 255uy; 255uy; 15uy|]
+        | 4_294_967_295u -> [| 255uy; 255uy; 255uy; 255uy; 15uy |]
         | _ -> [||]
 
     [<Theory>]
@@ -565,7 +575,7 @@ func main() {
             Assert.Equal(expectedBytes[2], lebEncoded[2])
             Assert.Equal(expectedBytes[1], lebEncoded[1])
             Assert.Equal(expectedBytes[0], lebEncoded[0])
-            
+
         elif expectedLength = 2 then
             Assert.Equal(expectedBytes[1], lebEncoded[1])
             Assert.Equal(expectedBytes[0], lebEncoded[0])
@@ -574,26 +584,30 @@ func main() {
 
     let i32 (v: int32) : byte array =
         let SEVEN_BIT_MASK = 127
-        let CONTINUATION_BIT : byte = 128uy
+        let CONTINUATION_BIT: byte = 128uy
         let mutable vall = v
-        let mutable r : byte array = [||]
+        let mutable r: byte array = [||]
         let mutable more = true
         let signBit = 64uy
+
         while more do
-            let b : byte = (byte)(vall &&& SEVEN_BIT_MASK)
+            let b: byte = (byte) (vall &&& SEVEN_BIT_MASK)
             let signBitSet = (b &&& signBit) <> 0uy
-            
+
             vall <- vall >>> 7
 
-            let nextVall = 
-                if ((vall = 0 && (not signBitSet)) || (vall = -1 && signBitSet)) then
-                    more <- false                
+            let nextVall =
+                if ((vall = 0 && (not signBitSet))
+                    || (vall = -1 && signBitSet)) then
+                    more <- false
                     b
                 else
                     b ||| CONTINUATION_BIT
+
             r <- Array.concat [ r; [| nextVall |] ]
+
         r
-        
+
     let getSignedExpectedBytes (num: int32) =
         match num with
         | 1 -> [| 1uy |]
@@ -653,7 +667,7 @@ func main() {
             Assert.Equal(expectedBytes[2], lebEncoded[2])
             Assert.Equal(expectedBytes[1], lebEncoded[1])
             Assert.Equal(expectedBytes[0], lebEncoded[0])
-            
+
         elif expectedLength = 2 then
             Assert.Equal(expectedBytes[1], lebEncoded[1])
             Assert.Equal(expectedBytes[0], lebEncoded[0])

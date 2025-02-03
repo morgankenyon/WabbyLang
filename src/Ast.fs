@@ -108,7 +108,8 @@ module Ast =
                         this.parameters
                         |> Array.map (fun s -> (s :> Expression).Str())
                         |> Array.reduce (fun a b -> sprintf "%s, %s" a b)
-                    else ""
+                    else
+                        ""
 
                 let bodyStr = (this.body :> Statement).Str()
                 sprintf "%s %s(%s) { %s }" this.token.Literal this.name.value paraStr bodyStr
