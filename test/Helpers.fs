@@ -75,3 +75,17 @@ module Helpers =
             new Ast.ExpressionStatement(identifierTokenPair, identifier)
 
         expressionStatement
+
+    let compileInstantiateAndPrint (input: string) (print: bool) =
+        let wasmBytes = EndToEnd.compileModuleAndPrint input print
+
+        let engine = new Engine()
+
+        let modd = Module.FromBytes(engine, "wauxLang", wasmBytes)
+
+        let linker = new Linker(engine)
+        let store = new Store(engine)
+
+        linker.Instantiate(store, modd) |> ignore
+
+        wasmBytes

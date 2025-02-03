@@ -4,7 +4,6 @@ module EndToEndTests =
     open Helpers
     open Xunit
     open Waux.Lang
-    open Wasmtime
 
     [<Theory>]
     [<InlineData("10 + 10 / 5 * 2 - 1", 13)>]
@@ -22,7 +21,7 @@ module EndToEndTests =
     let ``Can verify mathematical expression runs correctly`` (expression) (expectedResult) =
         let input = $"func main() {{ {expression} }}"
 
-        let bytes = EndToEnd.compileInstantiateAndPrint input true
+        let bytes = Helpers.compileInstantiateAndPrint input true
 
         let result = runWithInt32Return bytes
 
@@ -47,7 +46,7 @@ module EndToEndTests =
         let input =
             "func multi(z, v) { z * v; } func add(x, y) { let mul = multi(x, y); mul + x + y; } func main() { add(1,2); }"
 
-        let wasmBytes = EndToEnd.compileModuleAndPrint input true
+        let wasmBytes = EndToEnd.compileModuleAndPrint input false
 
         Assert.True(wasmBytes.Length > 0)
 

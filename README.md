@@ -28,16 +28,17 @@ The fastest way to get started is to install via nuget tool.
 How to compile and use.
 
 * Write a valid `.waux` program
-  * See [examples](./examples/waux/) to get started
+  * See [examples](./examples/) to get started
   * Every waux file requires a 0 parameter `main` function
   * All code must be in a single `.waux` file, waux does not currently support importing across files.
 * Run `waux compile <.waux file>` to generate a wasm file
 * Run `waux run <.wasm file>` to run the generated wasm
   * Can also run in any other wasm compliant runtime.
+  * This leverages the [wasmtime](https://www.nuget.org/packages/Wasmtime) nuget package.
 
 ## Language Overview
 
-> Please see the [examples](./examples/waux/) folder for valid programs
+> Please see the [examples](./examples/) folder for valid programs
 
 Waux currently supports the following language concepts:
 * Functions
@@ -86,15 +87,28 @@ func main() {
 }
 ```
 
-Currently variables and function names can be made of the following values:
-* Alpha characters: [a-zA-Z]
-* Digit characters: [0-9]
-* Underscore: [_]
-* CombinedRegex: [a-zA-Z_0-9]+
+Status:
+* Currently variables and function names can be made of the following values:
+  * Alpha characters: [a-zA-Z]
+  * Digit characters: [0-9]
+  * Underscore: [_]
+  * CombinedRegex: [a-zA-Z_0-9]+
+* There is currently no way to define an empty/null variable `let x;`
+
 
 ### Semicolons
 
-Semicolons separate expressions, the last semicolon is unneeded to indicate a return type. Future work may drop the need for semicolons
+Semicolons separate expressions, the last semicolon is unneeded to indicate a return type. Future work may drop the need for semicolons.
+
+General rule of thumb:
+* Add semicolon to all normal lines of code
+* Blocks of code `{}` do not need a semicolon after the closing block `}`.
+* Return values do not need a semicolon
+* But last line in a block that does not return a value (currently only `while` loop), need a semicolon.
+  * See the euler1 example below.
+  * `if/else` is currently an expression, so last line is assumed the return value. Again, see euler1 example below.
+
+> There is still some undefined behavior around semicolons. When I'm debugging sometimes I'll add semicolons to see if that fixes anything. Alpha code, am I right???
 
 ### Mathematical Expressions
 
@@ -124,6 +138,26 @@ Status:
 * Operator precedence (* before +, etc)
 * Use of parentheses to denotate precedence
 
+### Boolean Logic
+
+Currently Waux does not contain a true boolean value `true/false`. WebAssembly also does not contain a true boolean value.
+
+For comparison, it currently uses 0 meaning false and 1 meaning true.
+
+So it supports all the following boolean operators but just on integer values instead of `true/false`
+* `==` - equal
+* `!=` - not equal
+* `<` - less than
+* `<=` - less than equal
+* `>` - greater than
+* `>=` - greater than equal
+* `and` - only true if both expressions are true
+* `or` - true if either expressions are true
+
+All these operators are binary expressions in the form of: `<expression1> <operator> <expression2>`.
+
+You can utilize boolean logic with both of the following concepts.
+
 ### If/Else Expressions
 
 You can also add if/else expressions in waux:
@@ -141,6 +175,8 @@ func main() {
 ```
 
 Status:
+* Since `if/else` is an expression (returns a value), no semicolon is needed on the last lines of each branch.
+  * In the example above, `result` is set as the value of the `if/else` expressions.
 * Currently `else if` statement is not supported
 * Right now the `else` is optional, but will be changing in a future release
 
@@ -153,7 +189,7 @@ func countTo(n) {
     while (x < n) {
         x := x + 1; 
     }
-    x;
+    x
 }
 
 func main() {
@@ -163,7 +199,7 @@ func main() {
 
 Status:
 * `break` or `continue` keywords are currently supported
-
+* Since `while` loop is a statement instead of an expression, a semicolon is needed on the last line in the while loop.
 
 ### Euler1
 
